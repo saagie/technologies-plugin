@@ -99,7 +99,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         val buildDockerImage = project.tasks.create("buildDockerImage") {
             group = "technologies"
             description = "Build techno"
-            dependsOn("generateMetadata")
+            dependsOn(generateMetadata)
         }
     }
 

@@ -3,17 +3,15 @@ package io.saagie.technologies
 import io.saagie.technologies.model.Metadata
 import io.saagie.technologies.model.MetadataDocker
 import io.saagie.technologies.model.MetadataTechno
+import java.io.File
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
-import java.io.File
-
 
 class SaagieTechnologiesGradlePluginKtTest {
-
 
     @Nested
     inner class ProjectKotlinExtension {
@@ -23,59 +21,46 @@ class SaagieTechnologiesGradlePluginKtTest {
 
         @Test
         fun `generateVersionForDocker with simple version`() {
-
             with(
                 ProjectBuilder.builder()
                     .withProjectDir(projectdir)
                     .withName("myproject")
                     .build()
             ) {
-
-
                 this.version = "1.2.3"
                 assertEquals(this.version, this.getVersionForDocker())
             }
-
         }
 
         @Test
         fun `generateVersionForDocker with complex version`() {
-
             with(
                 ProjectBuilder.builder()
                     .withProjectDir(projectdir)
                     .withName("myproject")
                     .build()
             ) {
-
-
                 this.version = "1.2.3+TEST"
                 assertEquals(this.version.toString().replace("+", "_"), this.getVersionForDocker())
             }
-
         }
-
 
         @Test
         fun `generateTag`() {
-
             with(
                 ProjectBuilder.builder()
                     .withProjectDir(projectdir)
                     .withName("myproject")
                     .build()
             ) {
-
                 this.version = "1.2.3"
                 assertEquals("${this.name}-${this.getVersionForDocker()}", this.generateTag())
             }
-
         }
     }
 
     @Nested
     inner class StoreMetadata {
-
 
         @TempDir
         lateinit var projectdir: File
@@ -88,7 +73,7 @@ class SaagieTechnologiesGradlePluginKtTest {
                     .withName("myproject")
                     .build()
             ) {
-                this.version="1.2.3"
+                this.version = "1.2.3"
                 val plugin = SaagieTechnologiesGradlePlugin()
 
                 File("$projectDir/version.yml").appendText(

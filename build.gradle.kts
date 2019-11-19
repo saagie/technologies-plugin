@@ -62,6 +62,7 @@ kotlinter {
     ignoreFailures = false
     reporters = arrayOf("html")
     experimentalRules = false
+    disabledRules = arrayOf("import-ordering")
 }
 
 gradlePlugin {
