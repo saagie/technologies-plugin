@@ -75,8 +75,7 @@ gradlePlugin {
         }
     }
 }
-project.ext.set("gradle.publish.key", System.getenv("GRADLE_PUBLISH_KEY"))
-project.ext.set("gradle.publish.secret", System.getenv("GRADLE_PUBLISH_SECRET"))
+
 pluginBundle {
     website = github
     vcsUrl = github
