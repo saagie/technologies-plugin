@@ -11,7 +11,7 @@ plugins {
 }
 
 version = "1.0.0"
-group = "io.saagie"
+group = "com.saagie"
 
 object VersionInfo {
     const val kotlin = "1.3.60"
@@ -19,7 +19,7 @@ object VersionInfo {
 
 val versions: VersionInfo by extra { VersionInfo }
 val github = "https://github.com/saagie/technologies-plugin"
-val packageName = "io.saagie.technologies"
+val packageName = "com.saagie.technologies"
 
 repositories {
     jcenter()

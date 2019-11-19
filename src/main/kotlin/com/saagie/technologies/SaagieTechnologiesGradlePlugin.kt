@@ -1,4 +1,4 @@
-package io.saagie.technologies
+package com.saagie.technologies
 
 import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
 import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer
@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import io.saagie.technologies.model.Metadata
+import com.saagie.technologies.model.Metadata
 import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin

@@ -1,8 +1,8 @@
-package io.saagie.technologies
+package com.saagie.technologies
 
-import io.saagie.technologies.model.Metadata
-import io.saagie.technologies.model.MetadataDocker
-import io.saagie.technologies.model.MetadataTechno
+import com.saagie.technologies.model.Metadata
+import com.saagie.technologies.model.MetadataDocker
+import com.saagie.technologies.model.MetadataTechno
 import java.io.File
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals

@@ -1,4 +1,4 @@
-package io.saagie.technologies.model
+package com.saagie.technologies.model
 
 data class Metadata(
     val techno: MetadataTechno
