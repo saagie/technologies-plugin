@@ -1,23 +1,23 @@
 package io.saagie.technologies
 
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerWaitContainer
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
-import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerWaitContainer
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.create
-import org.gradle.api.GradleException
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import java.io.File
 import io.saagie.technologies.model.Metadata
+import java.io.File
+import org.gradle.api.GradleException
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.create
 
 class SaagieTechnologiesGradlePlugin : Plugin<Project> {
     companion object {
@@ -33,8 +33,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         val imageTestName = "${imageTestNameDetails.first}:${imageTestNameDetails.second}"
         var logs = ""
 
-
-
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
             this.inputDir.set(File("."))
             this.tags.add(imageName)
@@ -45,7 +43,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             tag.set(imageTestNameDetails.second)
         }
 
-
         val createContainer = project.tasks.create<DockerCreateContainer>("createContainer") {
             dependsOn(pullDockerImage)
             targetImageId(imageTestName)
@@ -55,7 +52,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             workingDir.set("/workdir")
             cmd.addAll("test", "--image", imageName, "--config", "/workdir/image_test.yml")
         }
-
 
         val startContainer = project.tasks.create<DockerStartContainer>("startContainer") {
             dependsOn(createContainer)
@@ -107,7 +103,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         }
     }
 
-
     fun readMetadata(projectDir: File): Metadata =
         getJacksonObjectMapper().readValue(
             File("${projectDir.parentFile.absoluteFile}/techno.yml").inputStream(),
@@ -116,8 +111,8 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
     fun getJacksonObjectMapper(): ObjectMapper = ObjectMapper(
         YAMLFactory()
-            .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER,false)
-            .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES,true)
+            .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
+            .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
     )
         .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
@@ -128,7 +123,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         val targetMetadata = File("${projectDir.absolutePath}/metadata.yml")
         targetMetadata.delete()
         File("${projectDir.absolutePath}/version.yml").copyTo(targetMetadata)
-        targetMetadata.appendText("\n"+
+        targetMetadata.appendText("\n" +
             getJacksonObjectMapper().writeValueAsString(
                 metadata.copy(
                     metadata.techno.copy(
