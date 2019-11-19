@@ -10,7 +10,7 @@ plugins {
     kotlin("jvm") version "1.3.60"
 }
 
-version = "1.0.2"
+version = "1.0.0"
 group = "io.saagie"
 
 object VersionInfo {
@@ -75,7 +75,8 @@ gradlePlugin {
         }
     }
 }
-
+project.ext.set("gradle.publish.key", System.getenv("GRADLE_PUBLISH_KEY"))
+project.ext.set("gradle.publish.secret", System.getenv("GRADLE_PUBLISH_SECRET"))
 pluginBundle {
     website = github
     vcsUrl = github

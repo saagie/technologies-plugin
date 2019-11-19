@@ -1,6 +1,10 @@
 name: Gradle Plugin Build/Test/Analyze
 
-on: [push]
+on:
+  push:
+    branches:
+      - '*'
+      - '!master'
 
 jobs:
   build:
@@ -14,4 +18,4 @@ jobs:
       with:
         java-version: 1.8
     - name: Build and test
-      run: ./gradlew build --parallel --scan
+      run: ./gradlew build --scan
