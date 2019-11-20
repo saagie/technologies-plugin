@@ -1,17 +1,72 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright 2019 Pierre Leresteux.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.kordamp.gradle.plugin.base.model.Organization
 
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("io.gitlab.arturbosch.detekt") version "1.1.1" // don't update until kotlin 1.3.41 is supported by Gradle
-    id("org.jmailen.kotlinter") version "2.1.3" // don't update until kotlin 1.3.41 supported by Gradle
+    id("io.gitlab.arturbosch.detekt") version "1.1.1"
+    id("org.jmailen.kotlinter") version "2.1.3"
+    id("org.kordamp.gradle.project") version "0.29.0"
     kotlin("jvm") version "1.3.60"
 }
 
-version = "1.0.0"
+version = "1.0.1"
 group = "com.saagie"
+
+config {
+    info {
+        name = "Technologies"
+        description = "Saagie gradle plugin for technologies"
+        inceptionYear = "2019"
+        vendor = "Saagie"
+
+        links {
+            website = "https://www.saagie.com"
+            scm = "https://github.com/saagie/technologies-plugin"
+        }
+
+        licensing {
+            licenses {
+                license {
+                    id = "Apache-2.0"
+                }
+            }
+        }
+
+        organization {
+            name = "Saagie"
+            url = "http://www.saagie.com"
+        }
+
+        people {
+            person {
+                id = "pierre"
+                name = "Pierre Leresteux"
+                email = "pierre@saagie.com"
+                roles = listOf("author", "developer")
+            }
+        }
+    }
+}
 
 object VersionInfo {
     const val kotlin = "1.3.60"
