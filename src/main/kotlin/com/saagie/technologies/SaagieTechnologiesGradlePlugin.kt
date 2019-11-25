@@ -24,12 +24,6 @@ import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
 import com.bmuschko.gradle.docker.tasks.container.DockerWaitContainer
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.saagie.technologies.model.Metadata
 import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -38,10 +32,15 @@ import org.gradle.kotlin.dsl.create
 
 class SaagieTechnologiesGradlePlugin : Plugin<Project> {
     companion object {
-        @JvmField val TIMEOUT_TEST_CONTAINER = 10
+        @JvmField
+        val TIMEOUT_TEST_CONTAINER = 10
     }
 
     override fun apply(project: Project) {
+
+        /**
+         * BUILD IMAGES
+         */
 
         val metadata = readMetadata(project.projectDir)
         val imageName = generateDockerTag(project, metadata)
@@ -119,38 +118,4 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             dependsOn(generateMetadata)
         }
     }
-
-    fun readMetadata(projectDir: File): Metadata =
-        getJacksonObjectMapper().readValue(
-            File("${projectDir.parentFile.absoluteFile}/techno.yml").inputStream(),
-            Metadata::class.java
-        )
-
-    fun getJacksonObjectMapper(): ObjectMapper = ObjectMapper(
-        YAMLFactory()
-            .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
-            .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
-    )
-        .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
-
-    fun generateDockerTag(project: Project, metadata: Metadata) =
-        "${metadata.techno.docker.image}:${project.generateTag()}"
-
-    fun storeMetadata(project: Project, projectDir: File, metadata: Metadata) {
-        val targetMetadata = File("${projectDir.absolutePath}/metadata.yml")
-        targetMetadata.delete()
-        File("${projectDir.absolutePath}/version.yml").copyTo(targetMetadata)
-        targetMetadata.appendText("\n" +
-            getJacksonObjectMapper().writeValueAsString(
-                metadata.copy(
-                    metadata.techno.copy(
-                        docker = metadata.techno.docker.copy(version = project.generateTag())
-                    )
-                )
-            )
-        )
-    }
 }
-
-fun Project.generateTag(): String = "${this.name}-${this.getVersionForDocker()}"
-fun Project.getVersionForDocker(): String = "${this.rootProject.version}".replace("+", "_")

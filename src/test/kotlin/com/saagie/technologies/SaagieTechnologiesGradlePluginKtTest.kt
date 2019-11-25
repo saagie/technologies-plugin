@@ -105,7 +105,7 @@ class SaagieTechnologiesGradlePluginKtTest {
                     MetadataDocker("image", "1.2.3")
                 )
                 val metadata = Metadata(techno = techno)
-                plugin.storeMetadata(project, projectDir, metadata)
+                storeMetadata(project, projectDir, metadata)
                 val metadataFinalFile = File("${project.projectDir.absolutePath}/metadata.yml")
                 assertTrue(metadataFinalFile.exists())
                 assertEquals(
