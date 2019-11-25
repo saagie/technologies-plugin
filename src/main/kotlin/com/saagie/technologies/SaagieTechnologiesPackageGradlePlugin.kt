@@ -23,16 +23,18 @@ import org.gradle.api.Project
 
 class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-
         /**
          * PACKAGE
          */
+        val outputDirectory = "tmp-zip"
+        val metadataFilename = "metadata.yml"
+
         val packageAllVersions = project.tasks.create("packageAllVersions") {
             group = "technologies"
             description = "Package all versions"
 
             doFirst {
-                with("${project.rootDir.path}/tmp-zip/") {
+                with("${project.rootDir.path}/$outputDirectory/") {
                     val rootZipDir = File(this)
                     rootZipDir.deleteRecursively()
                     rootZipDir.mkdir()
@@ -45,11 +47,12 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                     logger.error("VERSION : ${project.relativePath(it.toPath())}")
                                     hasVersion = true
                                     File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
-                                    File("${project.relativePath(it.toPath())}/metadata.yml").copyTo(
+
+                                    File("${project.relativePath(it.toPath())}/$metadataFilename").copyTo(
                                         File(
                                             "$this/${project.relativePath(
                                                 it.toPath()
-                                            )}/metadata.yml"
+                                            )}/$metadataFilename"
                                         )
                                     )
                                 }
