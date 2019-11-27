@@ -65,7 +65,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                 args = listOf(
                                     "-r",
                                     "${scope.folderName}.zip",
-                                    "${rootZipDir.absolutePath}/${scope.folderName}"
+                                    "${scope.folderName}"
                                 )
                             }
                         }
