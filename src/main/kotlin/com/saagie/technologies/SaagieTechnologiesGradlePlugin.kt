@@ -109,7 +109,9 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val generateMetadata = project.tasks.create("generateMetadata") {
             dependsOn(testImage)
-            storeMetadata(project, project.projectDir, metadata)
+            doLast {
+                storeMetadata(project, project.projectDir, metadata)
+            }
         }
 
         val buildDockerImage = project.tasks.create("buildDockerImage") {
