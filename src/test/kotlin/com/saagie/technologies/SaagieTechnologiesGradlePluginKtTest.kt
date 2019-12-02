@@ -20,13 +20,13 @@ package com.saagie.technologies
 import com.saagie.technologies.model.Metadata
 import com.saagie.technologies.model.MetadataDocker
 import com.saagie.technologies.model.MetadataTechno
-import java.io.File
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 
 class SaagieTechnologiesGradlePluginKtTest {
 
@@ -109,18 +109,19 @@ class SaagieTechnologiesGradlePluginKtTest {
                 val metadataFinalFile = File("${project.projectDir.absolutePath}/metadata.yml")
                 assertTrue(metadataFinalFile.exists())
                 assertEquals(
-"""version:
+                    """version:
   label: here_is_a_test
 techno:
   id: ${techno.id}
   label: ${techno.label}
+  available: ${techno.available}
   icon: ${techno.icon}
   recommendedVersion: ${techno.recommendedVersion}
   docker:
     image: ${techno.docker.image}
-    version: ${project.name}-${techno.docker.version}
-  available: ${techno.isAvailable}""".trimMargin(),
-                    metadataFinalFile.readText().trimIndent())
+    version: ${project.name}-${techno.docker.version}""".trimMargin(),
+                    metadataFinalFile.readText().trimIndent()
+                )
             }
         }
     }

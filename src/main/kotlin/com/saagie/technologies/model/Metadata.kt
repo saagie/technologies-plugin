@@ -26,7 +26,7 @@ data class Metadata(
 data class MetadataTechno(
     val id: String,
     val label: String,
-    val isAvailable: Boolean,
+    val available: Boolean,
     val minimumProductVersion: String?,
     val icon: String,
     val recommendedVersion: String,

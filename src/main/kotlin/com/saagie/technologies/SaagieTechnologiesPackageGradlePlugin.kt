@@ -17,9 +17,13 @@
  */
 package com.saagie.technologies
 
-import java.io.File
+import com.github.kittinunf.fuel.Fuel
+import com.saagie.technologies.model.Metadata
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.kordamp.gradle.plugin.base.ProjectConfigurationExtension
+import java.io.File
+import java.util.zip.ZipFile
 
 class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -49,11 +53,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                     File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
 
                                     File("${project.relativePath(it.toPath())}/$metadataFilename").copyTo(
-                                        File(
-                                            "$this/${project.relativePath(
-                                                it.toPath()
-                                            )}/$metadataFilename"
-                                        )
+                                        File("$this/${project.relativePath(it.toPath())}/$metadataFilename")
                                     )
                                 }
                             }
@@ -72,6 +72,60 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                 }
             }
+        }
+
+        /**
+         * PROMOTE
+         */
+        val metadataFileList = mutableListOf<String>()
+
+        val downloadAndUnzipReleaseAssets = project.tasks.create("downloadAndUnzipReleaseAssets") {
+            val createTempFile = File.createTempFile("certified", ".zip")
+
+            doFirst {
+                val config = project.property("effectiveConfig") as ProjectConfigurationExtension
+                val path = "${config.info.scm.url}/releases/download/${project.property("version")}/certified.zip"
+                logger.error("Path : $path")
+                Fuel.download(path)
+                    .fileDestination { _, _ -> createTempFile }
+                    .response()
+                logger.error("Download OK => ${createTempFile.absolutePath}")
+
+                ZipFile(createTempFile).use { zip ->
+                    zip.entries().asSequence().forEach { entry ->
+                        zip.getInputStream(entry).use { input ->
+                            if (entry.name.endsWith("metadata.yml")) {
+                                logger.error(">> ${entry.name}")
+                                metadataFileList.add(entry.name)
+                                File(entry.name).outputStream().use { input.copyTo(it) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        val fixMetadataVersion = project.tasks.create("fixMetadataVersion") {
+            dependsOn(downloadAndUnzipReleaseAssets)
+            doFirst {
+                metadataFileList.forEach {
+                    val metadata = getJacksonObjectMapper()
+                        .readValue((File(it)).inputStream(),
+                        Metadata::class.java
+                    )
+                    logger.error("$it => ${metadata.techno.docker.version}")
+                }
+            }
+        }
+
+        val promote = project.tasks.create("promote") {
+            group = "technologies"
+            description = "Promote the PR"
+
+            doFirst {
+                logger.error("> PROMOTE ${project.property("version")}")
+            }
+            dependsOn("fixMetadataVersion")
         }
     }
 }

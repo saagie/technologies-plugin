@@ -18,6 +18,7 @@
 package com.saagie.technologies
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
@@ -51,12 +52,13 @@ fun readMetadata(projectDir: File): Metadata =
         Metadata::class.java
     )
 
-fun getJacksonObjectMapper(): ObjectMapper = ObjectMapper(
-    YAMLFactory()
-        .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
-        .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
-)
-    .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
+fun getJacksonObjectMapper(): ObjectMapper =
+    ObjectMapper(
+        YAMLFactory()
+            .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
+            .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
+    ).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
 fun Project.generateTag(): String = "${this.name}-${this.getVersionForDocker()}"
 fun Project.getVersionForDocker(): String = "${this.rootProject.version}".replace("+", "_")

@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.kordamp.gradle.plugin.base.model.Organization
 
 plugins {
     `kotlin-dsl`
@@ -25,11 +24,11 @@ plugins {
     id("com.gradle.plugin-publish") version "0.10.1"
     id("io.gitlab.arturbosch.detekt") version "1.1.1"
     id("org.jmailen.kotlinter") version "2.1.3"
-    id("org.kordamp.gradle.project") version "0.29.0"
-    kotlin("jvm") version "1.3.60"
+    id("org.kordamp.gradle.project") version "0.30.3"
+    kotlin("jvm") version "1.3.61"
 }
 
-version = "1.0.5"
+version = "1.0.6"
 group = "com.saagie"
 
 config {
@@ -69,7 +68,7 @@ config {
 }
 
 object VersionInfo {
-    const val kotlin = "1.3.60"
+    const val kotlin = "1.3.61"
 }
 
 val versions: VersionInfo by extra { VersionInfo }
@@ -78,15 +77,18 @@ val packageName = "com.saagie.technologies"
 
 repositories {
     jcenter()
+    gradlePluginPortal()
 }
 
 dependencies {
     implementation(gradleApi())
     implementation(kotlin("stdlib-jdk8", version = versions.kotlin))
     implementation("com.bmuschko:gradle-docker-plugin:5.3.0")
-    compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.0")
-    compile("com.fasterxml.jackson.core:jackson-databind:2.10.0")
-    compile("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.10.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0")
+    implementation("com.github.kittinunf.fuel:fuel:2.2.1")
+    implementation("org.kordamp.gradle:project-gradle-plugin:0.30.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
     testImplementation(kotlin("test", version = versions.kotlin))
