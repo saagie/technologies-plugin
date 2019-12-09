@@ -18,19 +18,19 @@
 package com.saagie.technologies
 
 import org.gradle.api.Project
-import java.io.ByteArrayOutputStream
 import java.io.File
 
 enum class TYPE(val folderName: String) {
     JOB("job"),
     APP("app")
 }
+
 enum class SCOPE(val folderName: String) {
     CERTIFIED("certified"),
     EXPERIMENTAL("experimental")
 }
 
-fun File.isAVersion(): Boolean = this.isDirectory && File(this.absolutePath + "/metadata.yml").exists()
+fun File.isAVersion(fileName: String): Boolean = this.isDirectory && File(this.absolutePath + "/$fileName").exists()
 fun String.isA(type: TYPE): Boolean = this.contains("/" + type.folderName + "/")
 
 fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project> {
@@ -53,7 +53,8 @@ fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project>
         }
     return listModifiedProjects
 }
-fun getCurrentBranchName(project: Project): String {
+
+/*fun getCurrentBranchName(project: Project): String {
     ByteArrayOutputStream().apply {
         val os = this
         project.exec {
@@ -63,4 +64,4 @@ fun getCurrentBranchName(project: Project): String {
         }
         return os.toString().trim()
     }
-}
+}*/
