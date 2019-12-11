@@ -95,6 +95,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                     tempFile.copyTo(file, true)
                     logger.info("${file.path} UPDATED")
+                    logger.error("pull/tag/push [${metadata.techno.docker.image}] = ${metadata.techno.docker.version} => ${metadata.techno.docker.version.split("_").first()}")
                     // pushDocker()
                 }
             }
