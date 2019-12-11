@@ -24,6 +24,7 @@ import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
 import com.bmuschko.gradle.docker.tasks.container.DockerWaitContainer
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -107,8 +108,14 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             startContainer.mustRunAfter(buildImage)
         }
 
-        val generateMetadata = project.tasks.create("generateMetadata") {
+        val pushImage = project.tasks.create<DockerPushImage>("pushImage") {
             dependsOn(testImage)
+            this.imageName.set(imageTestNameDetails.first)
+            this.tag.set(imageTestNameDetails.second)
+        }
+
+        val generateMetadata = project.tasks.create("generateMetadata") {
+            dependsOn(pushImage)
             doLast {
                 storeMetadata(project, project.projectDir, metadata)
             }
