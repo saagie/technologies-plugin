@@ -110,8 +110,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val pushImage = project.tasks.create<DockerPushImage>("pushImage") {
             dependsOn(testImage)
-            this.imageName.set(imageTestNameDetails.first)
-            this.tag.set(imageTestNameDetails.second)
+            this.imageName.set(imageName)
         }
 
         val generateMetadata = project.tasks.create("generateMetadata") {
