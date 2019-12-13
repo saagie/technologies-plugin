@@ -17,19 +17,19 @@
  */
 package com.saagie.technologies
 
-import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
 import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer
 import com.bmuschko.gradle.docker.tasks.container.DockerWaitContainer
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
+import java.io.File
 
 class SaagieTechnologiesGradlePlugin : Plugin<Project> {
     companion object {
@@ -46,26 +46,24 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         val metadata = readMetadata(project.projectDir)
         val imageName = generateDockerTag(project, metadata)
 
-        val imageTestNameDetails = Pair("gcr.io/gcp-runtimes/container-structure-test", "latest")
-        val imageTestName = "${imageTestNameDetails.first}:${imageTestNameDetails.second}"
+        val imageTestName = "gcr.io/gcp-runtimes/container-structure-test:latest"
         var logs = ""
 
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
             this.inputDir.set(File("."))
-            this.tags.add(imageName)
+            this.images.add(imageName)
         }
 
         val pullDockerImage = project.tasks.create<DockerPullImage>("pullDockerImage") {
-            repository.set(imageTestNameDetails.first)
-            tag.set(imageTestNameDetails.second)
+            image.set(imageTestName)
         }
 
         val createContainer = project.tasks.create<DockerCreateContainer>("createContainer") {
             dependsOn(pullDockerImage)
             targetImageId(imageTestName)
-            autoRemove.set(false)
-            binds.put("${project.projectDir.absolutePath}/image_test.yml", "/workdir/image_test.yml")
-            binds.put("/var/run/docker.sock", "/var/run/docker.sock")
+            hostConfig.autoRemove.set(false)
+            hostConfig.binds.put("${project.projectDir.absolutePath}/image_test.yml", "/workdir/image_test.yml")
+            hostConfig.binds.put("/var/run/docker.sock", "/var/run/docker.sock")
             workingDir.set("/workdir")
             cmd.addAll("test", "--image", imageName, "--config", "/workdir/image_test.yml")
         }
@@ -110,7 +108,11 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val pushImage = project.tasks.create<DockerPushImage>("pushImage") {
             dependsOn(testImage)
-            this.imageName.set(imageName)
+            this.images.add(imageName)
+            this.registryCredentials {
+                username.set(System.getenv("DOCKER_USERNAME"))
+                password.set(System.getenv("DOCKER_PASSWORD"))
+            }
         }
 
         val generateMetadata = project.tasks.create("generateMetadata") {

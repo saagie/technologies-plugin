@@ -28,7 +28,7 @@ plugins {
     kotlin("jvm") version "1.3.61"
 }
 
-version = "1.0.10"
+version = "1.0.11"
 group = "com.saagie"
 
 config {
@@ -83,7 +83,7 @@ repositories {
 dependencies {
     implementation(gradleApi())
     implementation(kotlin("stdlib-jdk8", version = versions.kotlin))
-    implementation("com.bmuschko:gradle-docker-plugin:5.3.0")
+    implementation("com.bmuschko:gradle-docker-plugin:6.1.1")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.10.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0")
