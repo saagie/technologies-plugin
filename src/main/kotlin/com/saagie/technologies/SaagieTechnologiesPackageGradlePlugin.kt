@@ -17,8 +17,12 @@
  */
 package com.saagie.technologies
 
+import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.github.kittinunf.fuel.Fuel
 import com.saagie.technologies.model.Metadata
+import com.saagie.technologies.model.MetadataDocker
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -95,11 +99,31 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                     tempFile.copyTo(file, true)
                     logger.info("${file.path} UPDATED")
-                    logger.error("pull/tag/push [${metadata.techno.docker.image}] = ${metadata.techno.docker.version} => ${metadata.techno.docker.version.split("_").first()}")
-                    // pushDocker()
+                    pushDocker(metadata.techno.docker)
                 }
             }
         }
+    }
+
+    private fun pushDocker(metadataDocker: MetadataDocker) {
+        DockerPullImage().apply {
+            image.set(metadataDocker.imageSnapshot())
+            registryCredentials {
+                username.set(System.getenv("DOCKER_USERNAME"))
+                password.set(System.getenv("DOCKER_PASSWORD"))
+            }
+        }.runRemoteCommand()
+        DockerTagImage().apply {
+            targetImageId(metadataDocker.imageSnapshot())
+            tag.set(metadataDocker.versionPromote())
+        }.runRemoteCommand()
+        DockerPushImage().apply {
+            images.add(metadataDocker.imagePromote())
+            registryCredentials {
+                username.set(System.getenv("DOCKER_USERNAME"))
+                password.set(System.getenv("DOCKER_PASSWORD"))
+            }
+        }.runRemoteCommand()
     }
 
     private fun downloadAndUnzipReleaseAssets(

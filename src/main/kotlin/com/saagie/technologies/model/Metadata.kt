@@ -40,4 +40,7 @@ data class MetadataDocker(
     val version: String? = null
 ) {
     constructor() : this("", "")
+    fun imageSnapshot() = "$image:$version"
+    fun imagePromote() = "$image:${versionPromote()}"
+    fun versionPromote() = version?.split("_")?.first()
 }
