@@ -142,6 +142,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         val createTempFile = File.createTempFile("certified", ".zip")
 
         doFirst {
+            this.project.checkEnvVar()
             val config = project.property("effectiveConfig") as ProjectConfigurationExtension
             val path = "${config.info.scm.url}/releases/download/${project.property("version")}/certified.zip"
             logger.debug("Download assets : $path")

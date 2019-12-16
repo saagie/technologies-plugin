@@ -30,7 +30,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
 import java.io.File
-import java.util.Optional
 
 class SaagieTechnologiesGradlePlugin : Plugin<Project> {
     companion object {
@@ -39,17 +38,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-
-        /**
-         * CHECK BEFORE RUN
-         */
-        project.gradle.taskGraph.whenReady {
-            listOf("DOCKER_USERNAME", "DOCKER_PASSWORD").forEach {
-                if (!Optional.ofNullable(System.getenv(it)).isPresent) {
-                    throw GradleException("ENV $it is not set")
-                }
-            }
-        }
 
         /**
          * BUILD IMAGES
@@ -62,6 +50,9 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         var logs = ""
 
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
+            doFirst {
+                this.project.checkEnvVar()
+            }
             this.inputDir.set(File("."))
             this.images.add(imageName)
         }

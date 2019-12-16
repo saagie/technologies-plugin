@@ -24,8 +24,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.saagie.technologies.model.Metadata
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import java.io.File
+import java.util.Optional
 
 fun generateDockerTag(project: Project, metadata: Metadata) =
     "${metadata.techno.docker.image}:${project.generateTag()}"
@@ -62,3 +64,10 @@ fun getJacksonObjectMapper(): ObjectMapper =
 
 fun Project.generateTag(): String = "${this.name}-${this.getVersionForDocker()}"
 fun Project.getVersionForDocker(): String = "${this.rootProject.version}".replace("+", "_")
+fun Project.checkEnvVar() {
+    listOf("DOCKER_USERNAME", "DOCKER_PASSWORD").forEach {
+        if (!Optional.ofNullable(System.getenv(it)).isPresent) {
+            throw GradleException("ENV $it is not set")
+        }
+    }
+}
