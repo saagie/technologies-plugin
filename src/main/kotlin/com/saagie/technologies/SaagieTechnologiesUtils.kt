@@ -53,15 +53,3 @@ fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project>
         }
     return listModifiedProjects
 }
-
-/*fun getCurrentBranchName(project: Project): String {
-    ByteArrayOutputStream().apply {
-        val os = this
-        project.exec {
-            executable = "git"
-            args = listOf("rev-parse", "--abbrev-ref", "HEAD")
-            standardOutput = os
-        }
-        return os.toString().trim()
-    }
-}*/
