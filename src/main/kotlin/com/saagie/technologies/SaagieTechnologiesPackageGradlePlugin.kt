@@ -17,9 +17,10 @@
  */
 package com.saagie.technologies
 
-import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
-import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
+import com.github.dockerjava.core.DefaultDockerClientConfig
+import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.command.PullImageResultCallback
+import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.kittinunf.fuel.Fuel
 import com.saagie.technologies.model.Metadata
 import com.saagie.technologies.model.MetadataDocker
@@ -28,9 +29,15 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.kordamp.gradle.plugin.base.ProjectConfigurationExtension
 import java.io.File
+import java.util.concurrent.TimeUnit
 import java.util.zip.ZipFile
 
 class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
+    companion object {
+        @JvmField
+        val TIMEOUT_PUSH_PULL_DOCKER: Long = 10
+    }
+
     override fun apply(project: Project) {
         /**
          * PACKAGE
@@ -99,31 +106,33 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                     tempFile.copyTo(file, true)
                     logger.info("${file.path} UPDATED")
-                    pushDocker(metadata.techno.docker)
+                    promoteDockerImage(metadata.techno.docker)
                 }
             }
         }
     }
 
-    private fun pushDocker(metadataDocker: MetadataDocker) {
-        DockerPullImage().apply {
-            image.set(metadataDocker.imageSnapshot())
-            registryCredentials {
-                username.set(System.getenv("DOCKER_USERNAME"))
-                password.set(System.getenv("DOCKER_PASSWORD"))
-            }
-        }.runRemoteCommand()
-        DockerTagImage().apply {
-            targetImageId(metadataDocker.imageSnapshot())
-            tag.set(metadataDocker.versionPromote())
-        }.runRemoteCommand()
-        DockerPushImage().apply {
-            images.add(metadataDocker.imagePromote())
-            registryCredentials {
-                username.set(System.getenv("DOCKER_USERNAME"))
-                password.set(System.getenv("DOCKER_PASSWORD"))
-            }
-        }.runRemoteCommand()
+    private fun promoteDockerImage(metadataDocker: MetadataDocker) {
+        with(
+            DockerClientBuilder
+                .getInstance(
+                    DefaultDockerClientConfig
+                        .createDefaultConfigBuilder()
+                        .withRegistryUsername(System.getenv("DOCKER_USERNAME"))
+                        .withRegistryPassword(System.getenv("DOCKER_PASSWORD"))
+                        .build()
+                )
+                .build()
+        ) {
+            pullImageCmd(metadataDocker.imageSnapshot())
+                .exec(PullImageResultCallback())
+                .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
+            tagImageCmd(metadataDocker.imageSnapshot(), metadataDocker.image, metadataDocker.versionPromote())
+                .exec()
+            pushImageCmd(metadataDocker.imagePromote())
+                .exec(PushImageResultCallback())
+                .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
+        }
     }
 
     private fun downloadAndUnzipReleaseAssets(
