@@ -50,9 +50,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         var logs = ""
 
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
-            doFirst {
-                this.project.checkEnvVar()
-            }
             this.inputDir.set(File("."))
             this.images.add(imageName)
         }
@@ -110,6 +107,9 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         }
 
         val pushImage = project.tasks.create<DockerPushImage>("pushImage") {
+            doFirst {
+                this.project.checkEnvVar()
+            }
             dependsOn(testImage)
             this.images.add(imageName)
             this.registryCredentials {
