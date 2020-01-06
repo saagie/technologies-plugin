@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright 2019 Pierre Leresteux.
+ * Copyright 2019-2020 Pierre Leresteux.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ plugins {
     `java-gradle-plugin`
     `maven-publish`
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("io.gitlab.arturbosch.detekt") version "1.1.1"
+    id("io.gitlab.arturbosch.detekt") version "1.3.1"
     id("org.jmailen.kotlinter") version "2.1.3"
-    id("org.kordamp.gradle.project") version "0.30.3"
+    id("org.kordamp.gradle.project") version "0.31.2"
     kotlin("jvm") version "1.3.61"
 }
 
-version = "1.0.16"
+version = "1.0.17"
 group = "com.saagie"
 
 config {
@@ -111,7 +111,6 @@ tasks {
 
 detekt {
     input = files("src/main/kotlin", "src/test/kotlin")
-    filters = ".*/resources/.*,.*/build/.*"
     baseline = project.rootDir.resolve("detekt-baseline.xml")
 }
 

@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright 2019 Pierre Leresteux.
+ * Copyright 2019-2020 Pierre Leresteux.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,25 +139,28 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         project: Project,
         metadataFileList: MutableList<String>
     ): Task = project.tasks.create("downloadAndUnzipReleaseAssets") {
-        val createTempFile = File.createTempFile("certified", ".zip")
+
+        val createExperimentalTempFile = File.createTempFile(SCOPE.EXPERIMENTAL.folderName, ".zip")
 
         doFirst {
             this.project.checkEnvVar()
             val config = project.property("effectiveConfig") as ProjectConfigurationExtension
-            val path = "${config.info.scm.url}/releases/download/${project.property("version")}/certified.zip"
-            logger.debug("Download assets : $path")
-            Fuel.download(path)
-                .fileDestination { _, _ -> createTempFile }
-                .response()
-            logger.info("Download OK => ${createTempFile.absolutePath}")
-
-            ZipFile(createTempFile).use { zip ->
-                zip.entries().asSequence().forEach { entry ->
-                    zip.getInputStream(entry).use { input ->
-                        if (entry.name.endsWith("metadata.yml")) {
-                            logger.debug(">> ${entry.name}")
-                            metadataFileList.add(entry.name)
-                            File(entry.name).outputStream().use { input.copyTo(it) }
+            SCOPE.values().forEach {
+                val createTempFile = File.createTempFile(it.folderName, ".zip")
+                val path = "${config.info.scm.url}/releases/download/${project.property("version")}/${it.folderName}.zip"
+                logger.debug("Download assets : $path")
+                Fuel.download(path)
+                    .fileDestination { _, _ -> createTempFile }
+                    .response()
+                logger.info("Download OK => ${createTempFile.absolutePath}")
+                ZipFile(createTempFile).use { zip ->
+                    zip.entries().asSequence().forEach { entry ->
+                        zip.getInputStream(entry).use { input ->
+                            if (entry.name.endsWith("metadata.yml")) {
+                                logger.debug(">> ${entry.name}")
+                                metadataFileList.add(entry.name)
+                                File(entry.name).outputStream().use { input.copyTo(it) }
+                            }
                         }
                     }
                 }
