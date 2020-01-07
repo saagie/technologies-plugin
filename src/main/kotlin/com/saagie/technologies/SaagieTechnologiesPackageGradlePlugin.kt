@@ -81,7 +81,8 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             metadataFileList.forEach {
                 val metadata = getJacksonObjectMapper()
                     .readValue((File(it)).inputStream(), Metadata::class.java)
-                if (metadata.techno.docker.version != null &&
+                if (metadata.techno.docker != null &&
+                    metadata.techno.docker.version != null &&
                     metadata.techno.docker.version.endsWith(project.property("version") as String)
                 ) {
                     logger.debug("$it => ${metadata.techno.docker.version}")
@@ -140,14 +141,13 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         metadataFileList: MutableList<String>
     ): Task = project.tasks.create("downloadAndUnzipReleaseAssets") {
 
-        val createExperimentalTempFile = File.createTempFile(SCOPE.EXPERIMENTAL.folderName, ".zip")
-
         doFirst {
             this.project.checkEnvVar()
             val config = project.property("effectiveConfig") as ProjectConfigurationExtension
             SCOPE.values().forEach {
                 val createTempFile = File.createTempFile(it.folderName, ".zip")
-                val path = "${config.info.scm.url}/releases/download/${project.property("version")}/${it.folderName}.zip"
+                val path = "${config.info.scm.url}/releases/download/" +
+                        "${project.property("version")}/${it.folderName}.zip"
                 logger.debug("Download assets : $path")
                 Fuel.download(path)
                     .fileDestination { _, _ -> createTempFile }
