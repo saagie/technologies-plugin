@@ -29,10 +29,10 @@ data class MetadataTechno(
     val available: Boolean,
     val minimumProductVersion: String?,
     val icon: String,
-    val recommendedVersion: String,
-    val docker: MetadataDocker
+    val recommendedVersion: String?,
+    val docker: MetadataDocker?
 ) {
-    constructor() : this("", "", false, "", "", "", MetadataDocker())
+    constructor() : this("", "", false, null, "", null, null)
 }
 
 data class MetadataDocker(

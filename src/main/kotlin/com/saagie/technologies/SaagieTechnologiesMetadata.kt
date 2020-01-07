@@ -30,7 +30,7 @@ import java.io.File
 import java.util.Optional
 
 fun generateDockerTag(project: Project, metadata: Metadata) =
-    "${metadata.techno.docker.image}:${project.generateTag()}"
+    "${metadata.techno.docker?.image}:${project.generateTag()}"
 
 fun storeMetadata(project: Project, projectDir: File, metadata: Metadata) {
     val targetMetadata = File("${projectDir.absolutePath}/metadata.yml")
@@ -41,7 +41,7 @@ fun storeMetadata(project: Project, projectDir: File, metadata: Metadata) {
                 getJacksonObjectMapper().writeValueAsString(
                     metadata.copy(
                         metadata.techno.copy(
-                            docker = metadata.techno.docker.copy(version = project.generateTag())
+                            docker = metadata.techno.docker?.copy(version = project.generateTag())
                         )
                     )
                 )

@@ -118,8 +118,8 @@ techno:
   icon: ${techno.icon}
   recommendedVersion: ${techno.recommendedVersion}
   docker:
-    image: ${techno.docker.image}
-    version: ${project.name}-${techno.docker.version}""".trimMargin(),
+    image: ${techno.docker?.image}
+    version: ${project.name}-${techno.docker?.version}""".trimMargin(),
                     metadataFinalFile.readText().trimIndent()
                 )
             }
