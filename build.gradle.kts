@@ -28,7 +28,7 @@ plugins {
     kotlin("jvm") version "1.3.61"
 }
 
-version = "1.0.18"
+version = "1.0.19"
 group = "com.saagie"
 
 config {
@@ -62,6 +62,12 @@ config {
                 name = "Pierre Leresteux"
                 email = "pierre@saagie.com"
                 roles = listOf("author", "developer")
+            }
+            person {
+                id = "guillaume"
+                name = "Guillaume Naimi"
+                email = "guillaume.naimi@saagie.com"
+                roles = listOf("developer")
             }
         }
     }
