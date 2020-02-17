@@ -17,6 +17,8 @@
  */
 package com.saagie.technologies
 
+import com.saagie.technologies.model.Context
+import com.saagie.technologies.model.ContextMetadata
 import com.saagie.technologies.model.Metadata
 import com.saagie.technologies.model.MetadataDocker
 import com.saagie.technologies.model.MetadataTechno
@@ -93,33 +95,32 @@ class SaagieTechnologiesGradlePluginKtTest {
                 this.version = "1.2.3"
                 val plugin = SaagieTechnologiesGradlePlugin()
 
-                File("$projectDir/version.yml").appendText(
-                    """
-                    version:
-                      label: here_is_a_test
-                """.trimIndent()
-                )
-
                 val techno = MetadataTechno(
-                    "technoId", "technoLabel", true, null, "technoIcon", "technoRecommendedVersion",
-                    MetadataDocker("image", "1.2.3")
+                    "technoId", "technoLabel", true, "contextId", null, "technoIcon"
                 )
-                val metadata = Metadata(techno = techno)
-                storeMetadata(project, projectDir, metadata)
+                val context = Context("contextId", "contextLabel", true, false, MetadataDocker("nginx", "1.2.3"))
+                val metadata = Metadata(version = "v1", techno = techno)
+                val contextMetadata = ContextMetadata(context)
+                storeMetadata(project, projectDir, metadata, contextMetadata)
                 val metadataFinalFile = File("${project.projectDir.absolutePath}/metadata.yml")
                 assertTrue(metadataFinalFile.exists())
                 assertEquals(
-                    """version:
-  label: here_is_a_test
+                    """context:
+  id: ${context.id}
+  label: ${context.label}
+  available: ${context.available}
+  recommended: true
+  dockerInfo:
+    image: ${context.dockerInfo?.image}
+    version: ${project.name}-${context.dockerInfo?.version}
+
+version: ${metadata.version}
 techno:
   id: ${techno.id}
   label: ${techno.label}
   available: ${techno.available}
-  icon: ${techno.icon}
-  recommendedVersion: ${techno.recommendedVersion}
-  docker:
-    image: ${techno.docker?.image}
-    version: ${project.name}-${techno.docker?.version}""".trimMargin(),
+  recommended: ${techno.recommended}
+  icon: ${techno.icon}""".trimMargin(),
                     metadataFinalFile.readText().trimIndent()
                 )
             }
