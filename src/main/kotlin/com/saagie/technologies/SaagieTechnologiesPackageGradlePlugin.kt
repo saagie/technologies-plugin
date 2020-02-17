@@ -22,7 +22,7 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.kittinunf.fuel.Fuel
-import com.saagie.technologies.model.Metadata
+import com.saagie.technologies.model.ContextMetadata
 import com.saagie.technologies.model.MetadataDocker
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -80,12 +80,11 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         doFirst {
             metadataFileList.forEach {
                 val metadata = getJacksonObjectMapper()
-                    .readValue((File(it)).inputStream(), Metadata::class.java)
-                if (metadata.techno.docker != null &&
-                    metadata.techno.docker.version != null &&
-                    metadata.techno.docker.version.endsWith(project.property("version") as String)
+                    .readValue((File(it)).inputStream(), ContextMetadata::class.java)
+                if (metadata.context.dockerInfo?.version != null &&
+                    metadata.context.dockerInfo.version.endsWith(project.property("version") as String)
                 ) {
-                    logger.debug("$it => ${metadata.techno.docker.version}")
+                    logger.debug("$it => ${metadata.context.dockerInfo.version}")
                     val tempFile = createTempFile()
                     val file = File(it)
                     tempFile.printWriter().use { writer ->
@@ -93,11 +92,11 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             writer.println(
                                 when {
                                     line.startsWith("    version: ") &&
-                                        line.endsWith(metadata.techno.docker.version)
+                                        line.endsWith(metadata.context.dockerInfo.version)
                                     -> {
                                         line.replace(
-                                            metadata.techno.docker.version,
-                                            metadata.techno.docker.version.split("_").first()
+                                            metadata.context.dockerInfo.version,
+                                            metadata.context.dockerInfo.version.split("_").first()
                                         )
                                     }
                                     else -> line
@@ -107,7 +106,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                     tempFile.copyTo(file, true)
                     logger.info("${file.path} UPDATED")
-                    promoteDockerImage(metadata.techno.docker)
+                    promoteDockerImage(metadata.context.dockerInfo)
                 }
             }
         }

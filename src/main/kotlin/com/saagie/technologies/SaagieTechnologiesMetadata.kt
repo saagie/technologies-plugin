@@ -23,28 +23,30 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.saagie.technologies.model.ContextMetadata
 import com.saagie.technologies.model.Metadata
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import java.io.File
 import java.util.Optional
 
-fun generateDockerTag(project: Project, metadata: Metadata) =
-    "${metadata.techno.docker?.image}:${project.generateTag()}"
+fun generateDockerTag(project: Project, contextMetadata: ContextMetadata) =
+    "${contextMetadata.context.dockerInfo?.image}:${project.generateTag()}"
 
-fun storeMetadata(project: Project, projectDir: File, metadata: Metadata) {
+fun storeMetadata(project: Project, projectDir: File, metadata: Metadata, contextMetadata: ContextMetadata) {
     val targetMetadata = File("${projectDir.absolutePath}/metadata.yml")
     targetMetadata.delete()
-    File("${projectDir.absolutePath}/version.yml").copyTo(targetMetadata)
     targetMetadata.appendText(
-        "\n" +
-                getJacksonObjectMapper().writeValueAsString(
-                    metadata.copy(
-                        metadata.techno.copy(
-                            docker = metadata.techno.docker?.copy(version = project.generateTag())
-                        )
-                    )
+        getJacksonObjectMapper().writeValueAsString(
+            contextMetadata.copy(
+                context = contextMetadata.context.copy(
+                    dockerInfo = contextMetadata.context.dockerInfo?.copy(version = project.generateTag()),
+                    recommended = metadata.techno.recommended == contextMetadata.context.id
                 )
+            )
+        ) +
+            "\n" +
+            getJacksonObjectMapper().writeValueAsString(metadata)
     )
 }
 
@@ -52,6 +54,12 @@ fun readMetadata(projectDir: File): Metadata =
     getJacksonObjectMapper().readValue(
         File("${projectDir.parentFile.absoluteFile}/techno.yml").inputStream(),
         Metadata::class.java
+    )
+
+fun readContextMetadata(projectDir: File): ContextMetadata =
+    getJacksonObjectMapper().readValue(
+        File("${projectDir.absoluteFile}/context.yml").inputStream(),
+        ContextMetadata::class.java
     )
 
 fun getJacksonObjectMapper(): ObjectMapper =
