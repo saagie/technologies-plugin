@@ -29,11 +29,11 @@ data class MetadataTechno(
     val id: String,
     val label: String,
     val available: Boolean,
-    val recommended: String,
+    val recommended: String?,
     val description: String?,
     val icon: String
 ) {
-    constructor() : this("", "", false, "", null, "")
+    constructor() : this("", "", false, null, null, "")
 }
 
 data class ContextMetadata(
@@ -47,9 +47,21 @@ data class Context(
     val label: String,
     val available: Boolean,
     val recommended: Boolean = false,
-    val dockerInfo: MetadataDocker?
+    val dockerInfo: MetadataDocker?,
+    val trustLevel: String?,
+    val features: List<Feature>
 ) {
-    constructor() : this("", "", false, false, null)
+    constructor() : this("", "", false, false, null, "", emptyList())
+}
+
+data class Feature(
+    val field: String,
+    val label: String,
+    val mandatory: Boolean,
+    val comment: String?,
+    val defaultValue: String?
+) {
+    constructor() : this("", "", false, null, null)
 }
 
 data class MetadataDocker(

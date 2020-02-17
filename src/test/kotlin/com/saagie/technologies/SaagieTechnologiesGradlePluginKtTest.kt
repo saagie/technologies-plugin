@@ -98,7 +98,7 @@ class SaagieTechnologiesGradlePluginKtTest {
                 val techno = MetadataTechno(
                     "technoId", "technoLabel", true, "contextId", null, "technoIcon"
                 )
-                val context = Context("contextId", "contextLabel", true, false, MetadataDocker("nginx", "1.2.3"))
+                val context = Context("contextId", "contextLabel", true, false, MetadataDocker("nginx", "1.2.3"), "official", emptyList())
                 val metadata = Metadata(version = "v1", techno = techno)
                 val contextMetadata = ContextMetadata(context)
                 storeMetadata(project, projectDir, metadata, contextMetadata)
@@ -113,6 +113,8 @@ class SaagieTechnologiesGradlePluginKtTest {
   dockerInfo:
     image: ${context.dockerInfo?.image}
     version: ${project.name}-${context.dockerInfo?.version}
+  trustLevel: ${context.trustLevel}
+  features: []
 
 version: ${metadata.version}
 techno:
