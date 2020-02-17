@@ -93,7 +93,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             writer.println(
                                 when {
                                     line.startsWith("    version: ") &&
-                                            line.endsWith(metadata.techno.docker.version)
+                                        line.endsWith(metadata.techno.docker.version)
                                     -> {
                                         line.replace(
                                             metadata.techno.docker.version,
@@ -144,23 +144,21 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         doFirst {
             this.project.checkEnvVar()
             val config = project.property("effectiveConfig") as ProjectConfigurationExtension
-            SCOPE.values().forEach {
-                val createTempFile = File.createTempFile(it.folderName, ".zip")
-                val path = "${config.info.scm.url}/releases/download/" +
-                        "${project.property("version")}/${it.folderName}.zip"
-                logger.debug("Download assets : $path")
-                Fuel.download(path)
-                    .fileDestination { _, _ -> createTempFile }
-                    .response()
-                logger.info("Download OK => ${createTempFile.absolutePath}")
-                ZipFile(createTempFile).use { zip ->
-                    zip.entries().asSequence().forEach { entry ->
-                        zip.getInputStream(entry).use { input ->
-                            if (entry.name.endsWith("metadata.yml")) {
-                                logger.debug(">> ${entry.name}")
-                                metadataFileList.add(entry.name)
-                                File(entry.name).outputStream().use { input.copyTo(it) }
-                            }
+            val createTempFile = File.createTempFile("technologies", ".zip")
+            val path = "${config.info.scm.url}/releases/download/" +
+                "${project.property("version")}/technologies.zip"
+            logger.debug("Download assets : $path")
+            Fuel.download(path)
+                .fileDestination { _, _ -> createTempFile }
+                .response()
+            logger.info("Download OK => ${createTempFile.absolutePath}")
+            ZipFile(createTempFile).use { zip ->
+                zip.entries().asSequence().forEach { entry ->
+                    zip.getInputStream(entry).use { input ->
+                        if (entry.name.endsWith("metadata.yml")) {
+                            logger.debug(">> ${entry.name}")
+                            metadataFileList.add(entry.name)
+                            File(entry.name).outputStream().use { input.copyTo(it) }
                         }
                     }
                 }
@@ -181,32 +179,29 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 val rootZipDir = File(this)
                 rootZipDir.deleteRecursively()
                 rootZipDir.mkdir()
+                var hasVersion = false
+                File(project.rootDir.path + "/technologies").walkTopDown().forEach {
+                    when {
+                        it.isAVersion(metadataFilename) -> {
+                            logger.info("VERSION : ${project.relativePath(it.toPath())}")
+                            hasVersion = true
+                            File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
 
-                SCOPE.values().map { scope ->
-                    var hasVersion = false
-                    File(project.rootDir.path + "/" + scope.folderName).walkTopDown().forEach {
-                        when {
-                            it.isAVersion(metadataFilename) -> {
-                                logger.info("VERSION : ${project.relativePath(it.toPath())}")
-                                hasVersion = true
-                                File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
-
-                                File("${project.relativePath(it.toPath())}/$metadataFilename").copyTo(
-                                    File("$this/${project.relativePath(it.toPath())}/$metadataFilename")
-                                )
-                            }
-                        }
-                    }
-                    if (hasVersion) {
-                        project.exec {
-                            workingDir = rootZipDir
-                            executable = "zip"
-                            args = listOf(
-                                "-r",
-                                "${scope.folderName}.zip",
-                                "${scope.folderName}"
+                            File("${project.relativePath(it.toPath())}/$metadataFilename").copyTo(
+                                File("$this/${project.relativePath(it.toPath())}/$metadataFilename")
                             )
                         }
+                    }
+                }
+                if (hasVersion) {
+                    project.exec {
+                        workingDir = rootZipDir
+                        executable = "zip"
+                        args = listOf(
+                            "-r",
+                            "technologies.zip",
+                            "technologies"
+                        )
                     }
                 }
             }

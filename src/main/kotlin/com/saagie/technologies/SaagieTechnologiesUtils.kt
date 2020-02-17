@@ -25,11 +25,6 @@ enum class TYPE(val folderName: String) {
     APP("app")
 }
 
-enum class SCOPE(val folderName: String) {
-    CERTIFIED("certified"),
-    EXPERIMENTAL("experimental")
-}
-
 fun File.isAVersion(fileName: String): Boolean = this.isDirectory && File(this.absolutePath + "/$fileName").exists()
 fun String.isA(type: TYPE): Boolean = this.contains("/" + type.folderName + "/")
 
