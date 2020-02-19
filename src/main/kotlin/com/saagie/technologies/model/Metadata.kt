@@ -23,6 +23,12 @@ data class ContextMetadata(
     constructor() : this(null)
 }
 
+data class ContextsMetadata(
+    val contexts: List<ContextMetadata>
+) {
+    constructor() : this(emptyList())
+}
+
 data class MetadataDocker(
     val image: String,
     val version: String? = null

@@ -23,6 +23,7 @@ import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.kittinunf.fuel.Fuel
 import com.saagie.technologies.model.ContextMetadata
+import com.saagie.technologies.model.ContextsMetadata
 import com.saagie.technologies.model.MetadataDocker
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -80,33 +81,35 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         doFirst {
             metadataFileList.forEach {
                 val metadata = getJacksonObjectMapper()
-                    .readValue((File(it)).inputStream(), ContextMetadata::class.java)
-                if (metadata.dockerInfo?.version != null &&
-                    metadata.dockerInfo.version.endsWith(project.property("version") as String)
-                ) {
-                    logger.debug("$it => ${metadata.dockerInfo.version}")
-                    val tempFile = createTempFile()
-                    val file = File(it)
-                    tempFile.printWriter().use { writer ->
-                        file.forEachLine { line ->
-                            writer.println(
-                                when {
-                                    line.startsWith("    version: ") &&
-                                        line.endsWith(metadata.dockerInfo.version)
-                                    -> {
-                                        line.replace(
-                                            metadata.dockerInfo.version,
-                                            metadata.dockerInfo.version.split("_").first()
-                                        )
+                    .readValue((File(it)).inputStream(), ContextsMetadata::class.java)
+                val tempFile = createTempFile()
+                val file = File(it)
+                metadata.contexts.forEach { context ->
+                    if (context.dockerInfo?.version != null &&
+                        context.dockerInfo.version.endsWith(project.property("version") as String)
+                    ) {
+                        logger.debug("$it => ${context.dockerInfo.version}")
+                        tempFile.printWriter().use { writer ->
+                            file.forEachLine { line ->
+                                writer.println(
+                                    when {
+                                        line.startsWith("    version: ") &&
+                                            line.endsWith(context.dockerInfo.version)
+                                        -> {
+                                            line.replace(
+                                                context.dockerInfo.version,
+                                                context.dockerInfo.version.split("_").first()
+                                            )
+                                        }
+                                        else -> line
                                     }
-                                    else -> line
-                                }
-                            )
+                                )
+                            }
                         }
+                        promoteDockerImage(context.dockerInfo)
                     }
                     tempFile.copyTo(file, true)
                     logger.info("${file.path} UPDATED")
-                    promoteDockerImage(metadata.dockerInfo)
                 }
             }
         }
@@ -168,14 +171,14 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     private fun constructMetadata(project: Project) {
         File(project.rootDir.path + "/technologies").walkTopDown().forEach {
             when {
-                it.isAVersion("techno.yml") -> {
+                it.isADirectoryContainingFile("techno.yml") -> {
                     val targetMetadata = File("$it/metadata.yml")
                     targetMetadata.delete()
                     File("$it/techno.yml").copyTo(targetMetadata)
                     targetMetadata.appendText("contexts:")
                     it.walkTopDown().forEach {
                         when {
-                            it.isAVersion("context.yml") -> {
+                            it.isADirectoryContainingFile("context.yml") -> {
                                 val dockerVersion = getJacksonObjectMapper()
                                     .readValue((it).inputStream(), ContextMetadata::class.java).dockerInfo?.version
                                 File("$it/context.yml").forEachLine {
@@ -208,7 +211,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 var hasVersion = false
                 File(project.rootDir.path + "/technologies").walkTopDown().forEach {
                     when {
-                        it.isAVersion(metadataFilename) -> {
+                        it.isADirectoryContainingFile(metadataFilename) -> {
                             logger.info("VERSION : ${project.relativePath(it.toPath())}")
                             hasVersion = true
                             File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()

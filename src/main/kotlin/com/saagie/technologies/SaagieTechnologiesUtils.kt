@@ -25,7 +25,7 @@ enum class TYPE(val folderName: String) {
     APP("app")
 }
 
-fun File.isAVersion(fileName: String): Boolean = this.isDirectory && File(this.absolutePath + "/$fileName").exists()
+fun File.isADirectoryContainingFile(fileName: String): Boolean = this.isDirectory && File(this.absolutePath + "/$fileName").exists()
 fun String.isA(type: TYPE): Boolean = this.contains("/" + type.folderName + "/")
 
 fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project> {
