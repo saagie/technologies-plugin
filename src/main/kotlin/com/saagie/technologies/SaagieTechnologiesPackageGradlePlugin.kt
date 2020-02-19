@@ -81,10 +81,10 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             metadataFileList.forEach {
                 val metadata = getJacksonObjectMapper()
                     .readValue((File(it)).inputStream(), ContextMetadata::class.java)
-                if (metadata.context.dockerInfo?.version != null &&
-                    metadata.context.dockerInfo.version.endsWith(project.property("version") as String)
+                if (metadata.dockerInfo?.version != null &&
+                    metadata.dockerInfo.version.endsWith(project.property("version") as String)
                 ) {
-                    logger.debug("$it => ${metadata.context.dockerInfo.version}")
+                    logger.debug("$it => ${metadata.dockerInfo.version}")
                     val tempFile = createTempFile()
                     val file = File(it)
                     tempFile.printWriter().use { writer ->
@@ -92,11 +92,11 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             writer.println(
                                 when {
                                     line.startsWith("    version: ") &&
-                                        line.endsWith(metadata.context.dockerInfo.version)
+                                        line.endsWith(metadata.dockerInfo.version)
                                     -> {
                                         line.replace(
-                                            metadata.context.dockerInfo.version,
-                                            metadata.context.dockerInfo.version.split("_").first()
+                                            metadata.dockerInfo.version,
+                                            metadata.dockerInfo.version.split("_").first()
                                         )
                                     }
                                     else -> line
@@ -106,7 +106,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                     tempFile.copyTo(file, true)
                     logger.info("${file.path} UPDATED")
-                    promoteDockerImage(metadata.context.dockerInfo)
+                    promoteDockerImage(metadata.dockerInfo)
                 }
             }
         }
@@ -165,6 +165,33 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         }
     }
 
+    private fun constructMetadata(project: Project) {
+        File(project.rootDir.path + "/technologies").walkTopDown().forEach {
+            when {
+                it.isAVersion("techno.yml") -> {
+                    val targetMetadata = File("$it/metadata.yml")
+                    targetMetadata.delete()
+                    File("$it/techno.yml").copyTo(targetMetadata)
+                    targetMetadata.appendText("contexts:")
+                    it.walkTopDown().forEach {
+                        when {
+                            it.isAVersion("context.yml") -> {
+                                val dockerVersion = getJacksonObjectMapper()
+                                    .readValue((it).inputStream(), ContextMetadata::class.java).dockerInfo?.version
+                                File("$it/context.yml").forEachLine {
+                                    targetMetadata.appendText("  $it")
+                                    if (it.startsWith("    image:") && dockerVersion != null) {
+                                        targetMetadata.appendText("  version: $dockerVersion")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun packageAllVersions(
         project: Project,
         outputDirectory: String,
@@ -172,8 +199,8 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     ): Task = project.tasks.create("packageAllVersions") {
         group = "technologies"
         description = "Package all versions"
-
         doFirst {
+            constructMetadata(project)
             with("${project.rootDir.path}/$outputDirectory/") {
                 val rootZipDir = File(this)
                 rootZipDir.deleteRecursively()
