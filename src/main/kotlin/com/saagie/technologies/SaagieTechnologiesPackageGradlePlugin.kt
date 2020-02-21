@@ -175,16 +175,25 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     val targetMetadata = File("$it/metadata.yml")
                     targetMetadata.delete()
                     File("$it/techno.yml").copyTo(targetMetadata)
-                    targetMetadata.appendText("contexts:")
+                    targetMetadata.appendText("\ncontexts:")
                     it.walkTopDown().forEach {
                         when {
                             it.isADirectoryContainingFile("context.yml") -> {
-                                val dockerVersion = getJacksonObjectMapper()
-                                    .readValue((it).inputStream(), ContextMetadata::class.java).dockerInfo?.version
-                                File("$it/context.yml").forEachLine {
-                                    targetMetadata.appendText("  $it")
-                                    if (it.startsWith("    image:") && dockerVersion != null) {
-                                        targetMetadata.appendText("  version: $dockerVersion")
+                                val dockerInfoFile = File("$it/dockerInfo.yml")
+                                val dockerVersion = when {
+                                    dockerInfoFile.exists() -> getJacksonObjectMapper()
+                                            .readValue(dockerInfoFile.inputStream(), ContextMetadata::class.java).dockerInfo?.version
+                                    else -> null
+                                }
+                                val lines = File("$it/context.yml").readLines()
+                                lines.forEachIndexed { index, line ->
+                                    when (index) {
+                                        0 -> targetMetadata.appendText("\n  - $line")
+                                        else -> targetMetadata.appendText("\n    $line")
+                                    }
+                                    println("$line : ${line.startsWith("  image:")}")
+                                    if (line.startsWith("  image:") && dockerVersion != null) {
+                                        targetMetadata.appendText("\n      version: $dockerVersion")
                                     }
                                 }
                             }
