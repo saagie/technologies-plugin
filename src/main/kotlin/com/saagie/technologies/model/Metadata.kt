@@ -17,51 +17,16 @@
  */
 package com.saagie.technologies.model
 
-data class Metadata(
-    val version: String,
-    val techno: MetadataTechno
-
-) {
-    constructor() : this("", MetadataTechno())
-}
-
-data class MetadataTechno(
-    val id: String,
-    val label: String,
-    val available: Boolean,
-    val recommended: String?,
-    val description: String?,
-    val icon: String
-) {
-    constructor() : this("", "", false, null, null, "")
-}
-
 data class ContextMetadata(
-    val context: Context
+    val dockerInfo: MetadataDocker?
 ) {
-    constructor() : this(Context())
+    constructor() : this(null)
 }
 
-data class Context(
-    val id: String,
-    val label: String,
-    val available: Boolean,
-    val recommended: Boolean = false,
-    val dockerInfo: MetadataDocker?,
-    val trustLevel: String?,
-    val features: List<Feature>
+data class ContextsMetadata(
+    val contexts: List<ContextMetadata>
 ) {
-    constructor() : this("", "", false, false, null, "", emptyList())
-}
-
-data class Feature(
-    val field: String,
-    val label: String,
-    val mandatory: Boolean,
-    val comment: String?,
-    val defaultValue: String?
-) {
-    constructor() : this("", "", false, null, null)
+    constructor() : this(emptyList())
 }
 
 data class MetadataDocker(

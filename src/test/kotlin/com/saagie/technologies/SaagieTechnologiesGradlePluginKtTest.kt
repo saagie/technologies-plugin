@@ -17,11 +17,8 @@
  */
 package com.saagie.technologies
 
-import com.saagie.technologies.model.Context
 import com.saagie.technologies.model.ContextMetadata
-import com.saagie.technologies.model.Metadata
 import com.saagie.technologies.model.MetadataDocker
-import com.saagie.technologies.model.MetadataTechno
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -95,34 +92,14 @@ class SaagieTechnologiesGradlePluginKtTest {
                 this.version = "1.2.3"
                 val plugin = SaagieTechnologiesGradlePlugin()
 
-                val techno = MetadataTechno(
-                    "technoId", "technoLabel", true, "contextId", null, "technoIcon"
-                )
-                val context = Context("contextId", "contextLabel", true, false, MetadataDocker("nginx", "1.2.3"), "official", emptyList())
-                val metadata = Metadata(version = "v1", techno = techno)
-                val contextMetadata = ContextMetadata(context)
-                storeMetadata(project, projectDir, metadata, contextMetadata)
-                val metadataFinalFile = File("${project.projectDir.absolutePath}/metadata.yml")
+                val contextMetadata = ContextMetadata(MetadataDocker("nginx", "1.2.3"))
+                storeMetadata(project, projectDir, contextMetadata)
+                val metadataFinalFile = File("${project.projectDir.absolutePath}/dockerInfo.yml")
                 assertTrue(metadataFinalFile.exists())
                 assertEquals(
-                    """context:
-  id: ${context.id}
-  label: ${context.label}
-  available: ${context.available}
-  recommended: true
-  dockerInfo:
-    image: ${context.dockerInfo?.image}
-    version: ${project.name}-${context.dockerInfo?.version}
-  trustLevel: ${context.trustLevel}
-  features: []
-
-version: ${metadata.version}
-techno:
-  id: ${techno.id}
-  label: ${techno.label}
-  available: ${techno.available}
-  recommended: ${techno.recommended}
-  icon: ${techno.icon}""".trimMargin(),
+                    """dockerInfo:
+  image: ${contextMetadata.dockerInfo?.image}
+  version: ${project.name}-${contextMetadata.dockerInfo?.version}""".trimMargin(),
                     metadataFinalFile.readText().trimIndent()
                 )
             }
