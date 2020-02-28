@@ -24,7 +24,7 @@ data class ContextMetadata(
 }
 
 data class ContextsMetadata(
-    val contexts: List<ContextMetadata>
+    val contexts: List<ContextMetadata> = emptyList()
 ) {
     constructor() : this(emptyList())
 }
