@@ -93,7 +93,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             file.forEachLine { line ->
                                 writer.println(
                                     when {
-                                        line.startsWith("    version: ") &&
+                                        line.startsWith("      version: ") &&
                                             line.endsWith(context.dockerInfo.version)
                                         -> {
                                             line.replace(
