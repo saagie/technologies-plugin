@@ -40,7 +40,7 @@ fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project>
     ).inputStream.bufferedReader().readText()
         .split("\n").dropLast(1)
         .forEach { pathFile ->
-            if (pathFile.isA(type) && File(pathFile).isFile) {
+            if (pathFile.isA(type) && (File(pathFile).isFile || !File(pathFile).exists())) {
                 subProjects
                     .filter { it.path == ":${pathFile.split("/").dropLast(1).last()}" }
                     .forEach { listModifiedProjects.add(it) }

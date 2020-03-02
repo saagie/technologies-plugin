@@ -46,7 +46,9 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         val outputDirectory = "tmp-zip"
         val metadataFilename = "metadata.yml"
 
-        val packageAllVersions = packageAllVersions(project, outputDirectory, metadataFilename)
+        val constructMetadata = constructMetadata(project)
+        val packageAllVersionsForPromote = packageAllVersionsForPromote(project, outputDirectory, metadataFilename)
+        val packageAllVersions = packageAllVersions(project, constructMetadata, packageAllVersionsForPromote)
 
         /**
          * PROMOTE
@@ -54,12 +56,12 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         val metadataFileList = mutableListOf<String>()
         val downloadAndUnzipReleaseAssets = downloadAndUnzipReleaseAssets(project, metadataFileList)
         val fixMetadataVersion = fixMetadataVersion(project, downloadAndUnzipReleaseAssets, metadataFileList)
-        val promote = promote(project, packageAllVersions, fixMetadataVersion)
+        val promote = promote(project, packageAllVersionsForPromote, fixMetadataVersion)
     }
 
     private fun promote(
         project: Project,
-        packageAllVersions: Task,
+        packageAllVersionsForPromote: Task,
         fixMetadataVersion: Task
     ): Task = project.tasks.create("promote") {
         group = "technologies"
@@ -68,8 +70,8 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         doFirst {
             logger.info("> PROMOTE ${project.property("version")} DONE")
         }
-        packageAllVersions.mustRunAfter(fixMetadataVersion)
-        dependsOn(fixMetadataVersion, packageAllVersions)
+        packageAllVersionsForPromote.mustRunAfter(fixMetadataVersion)
+        dependsOn(fixMetadataVersion, packageAllVersionsForPromote)
     }
 
     private fun fixMetadataVersion(
@@ -86,9 +88,9 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 val file = File(it)
                 metadata.contexts.forEach { context ->
                     if (context.dockerInfo?.version != null &&
-                        context.dockerInfo.version.endsWith(project.property("version") as String)
+                        context.dockerInfo.version.endsWith((project.property("version") as String).replace("+", "_"))
                     ) {
-                        logger.debug("$it => ${context.dockerInfo.version}")
+                        logger.info("$it => ${context.dockerInfo.version}")
                         tempFile.printWriter().use { writer ->
                             file.forEachLine { line ->
                                 writer.println(
@@ -168,32 +170,34 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun constructMetadata(project: Project) {
-        File(project.rootDir.path + "/technologies").walkTopDown().forEach {
-            when {
-                it.isADirectoryContainingFile("techno.yml") -> {
-                    val targetMetadata = File("$it/metadata.yml")
-                    targetMetadata.delete()
-                    File("$it/techno.yml").copyTo(targetMetadata)
-                    targetMetadata.appendText("\ncontexts:")
-                    it.walkTopDown().forEach {
-                        when {
-                            it.isADirectoryContainingFile("context.yml") -> {
-                                val dockerInfoFile = File("$it/dockerInfo.yml")
-                                val dockerVersion = when {
-                                    dockerInfoFile.exists() -> getJacksonObjectMapper()
+    private fun constructMetadata(project: Project): Task = project.tasks.create("constructMetadata") {
+        doFirst {
+            File(project.rootDir.path + "/technologies").walkTopDown().forEach {
+                when {
+                    it.isADirectoryContainingFile("techno.yml") -> {
+                        val targetMetadata = File("$it/metadata.yml")
+                        targetMetadata.delete()
+                        File("$it/techno.yml").copyTo(targetMetadata)
+                        targetMetadata.appendText("\ncontexts:")
+                        it.walkTopDown().forEach {
+                            when {
+                                it.isADirectoryContainingFile("context.yml") -> {
+                                    val dockerInfoFile = File("$it/dockerInfo.yml")
+                                    val dockerVersion = when {
+                                        dockerInfoFile.exists() -> getJacksonObjectMapper()
                                             .readValue(dockerInfoFile.inputStream(), ContextMetadata::class.java).dockerInfo?.version
-                                    else -> null
-                                }
-                                val lines = File("$it/context.yml").readLines()
-                                lines.forEachIndexed { index, line ->
-                                    when (index) {
-                                        0 -> targetMetadata.appendText("\n  - $line")
-                                        else -> targetMetadata.appendText("\n    $line")
+                                        else -> null
                                     }
-                                    println("$line : ${line.startsWith("  image:")}")
-                                    if (line.startsWith("  image:") && dockerVersion != null) {
-                                        targetMetadata.appendText("\n      version: $dockerVersion")
+                                    val lines = File("$it/context.yml").readLines()
+                                    lines.forEachIndexed { index, line ->
+                                        when (index) {
+                                            0 -> targetMetadata.appendText("\n  - $line")
+                                            else -> targetMetadata.appendText("\n    $line")
+                                        }
+                                        println("$line : ${line.startsWith("  image:")}")
+                                        if (line.startsWith("  image:") && dockerVersion != null) {
+                                            targetMetadata.appendText("\n      version: $dockerVersion")
+                                        }
                                     }
                                 }
                             }
@@ -204,15 +208,12 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun packageAllVersions(
+    private fun packageAllVersionsForPromote(
         project: Project,
         outputDirectory: String,
         metadataFilename: String
-    ): Task = project.tasks.create("packageAllVersions") {
-        group = "technologies"
-        description = "Package all versions"
+    ): Task = project.tasks.create("packageAllVersionsForPromote") {
         doFirst {
-            constructMetadata(project)
             with("${project.rootDir.path}/$outputDirectory/") {
                 val rootZipDir = File(this)
                 rootZipDir.deleteRecursively()
@@ -244,5 +245,16 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 }
             }
         }
+    }
+
+    private fun packageAllVersions(
+        project: Project,
+        packageAllVersionsForPromote: Task,
+        constructMetadata: Task
+    ): Task = project.tasks.create("packageAllVersions") {
+        group = "technologies"
+        description = "Package all versions"
+        packageAllVersionsForPromote.mustRunAfter(constructMetadata)
+        dependsOn(constructMetadata, packageAllVersionsForPromote)
     }
 }
