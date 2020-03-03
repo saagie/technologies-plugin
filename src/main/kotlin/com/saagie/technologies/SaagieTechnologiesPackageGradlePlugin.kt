@@ -86,33 +86,28 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     .readValue((File(it)).inputStream(), ContextsMetadata::class.java)
                 val tempFile = createTempFile()
                 val file = File(it)
+                val dockerFormattedVersion = (project.property("version") as String).replace("+", "_")
+                tempFile.printWriter().use { writer ->
+                    file.forEachLine { line ->
+                        writer.println(
+                            when {
+                                line.startsWith("      version: ") && line.endsWith(dockerFormattedVersion)
+                                -> line.replace(dockerFormattedVersion, "")
+                                else -> line
+                            }
+                        )
+                    }
+                }
                 metadata.contexts.forEach { context ->
                     if (context.dockerInfo?.version != null &&
-                        context.dockerInfo.version.endsWith((project.property("version") as String).replace("+", "_"))
+                        context.dockerInfo.version.endsWith(dockerFormattedVersion)
                     ) {
                         logger.info("$it => ${context.dockerInfo.version}")
-                        tempFile.printWriter().use { writer ->
-                            file.forEachLine { line ->
-                                writer.println(
-                                    when {
-                                        line.startsWith("      version: ") &&
-                                            line.endsWith(context.dockerInfo.version)
-                                        -> {
-                                            line.replace(
-                                                context.dockerInfo.version,
-                                                context.dockerInfo.version.split("_").first()
-                                            )
-                                        }
-                                        else -> line
-                                    }
-                                )
-                            }
-                        }
                         promoteDockerImage(context.dockerInfo)
                     }
-                    tempFile.copyTo(file, true)
-                    logger.info("${file.path} UPDATED")
                 }
+                tempFile.copyTo(file, true)
+                logger.info("${file.path} UPDATED")
             }
         }
     }
