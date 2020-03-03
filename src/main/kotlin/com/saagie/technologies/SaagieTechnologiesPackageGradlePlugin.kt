@@ -92,7 +92,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                         writer.println(
                             when {
                                 line.startsWith("      version: ") && line.endsWith(dockerFormattedVersion)
-                                -> line.replace(dockerFormattedVersion, "")
+                                -> line.replace("-$dockerFormattedVersion", "")
                                 else -> line
                             }
                         )
@@ -167,6 +167,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
 
     private fun constructMetadata(project: Project): Task = project.tasks.create("constructMetadata") {
         doFirst {
+            logger.info("Construct metadata")
             File(project.rootDir.path + "/technologies").walkTopDown().forEach {
                 when {
                     it.isADirectoryContainingFile("techno.yml") -> {
