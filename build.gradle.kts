@@ -24,11 +24,11 @@ plugins {
     id("com.gradle.plugin-publish") version "0.10.1"
     id("io.gitlab.arturbosch.detekt") version "1.3.1"
     id("org.jmailen.kotlinter") version "2.1.3"
-    id("org.kordamp.gradle.project") version "0.31.2"
-    kotlin("jvm") version "1.3.61"
+    id("org.kordamp.gradle.project") version "0.32.0"
+    kotlin("jvm") version "1.3.70"
 }
 
-version = "1.0.28"
+version = "1.1.0"
 group = "com.saagie"
 
 config {
@@ -74,7 +74,12 @@ config {
 }
 
 object VersionInfo {
-    const val kotlin = "1.3.61"
+    const val kotlin = "1.3.70"
+    const val jackson = "2.10.3"
+    const val kordamp = "0.32.0"
+    const val junit = "5.5.2"
+    const val fuel = "2.2.1"
+    const val gradledocker="6.3.0"
 }
 
 val versions: VersionInfo by extra { VersionInfo }
@@ -89,14 +94,14 @@ repositories {
 dependencies {
     implementation(gradleApi())
     implementation(kotlin("stdlib-jdk8", version = versions.kotlin))
-    implementation("com.bmuschko:gradle-docker-plugin:6.1.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.0")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.10.0")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0")
-    implementation("com.github.kittinunf.fuel:fuel:2.2.1")
-    implementation("org.kordamp.gradle:project-gradle-plugin:0.30.3")
+    implementation("com.bmuschko:gradle-docker-plugin:${VersionInfo.gradledocker}")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${VersionInfo.jackson}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:${VersionInfo.jackson}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${VersionInfo.jackson}")
+    implementation("com.github.kittinunf.fuel:fuel:${VersionInfo.fuel}")
+    implementation("org.kordamp.gradle:project-gradle-plugin:${VersionInfo.kordamp}")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:${VersionInfo.junit}")
     testImplementation(kotlin("test", version = versions.kotlin))
 }
 
