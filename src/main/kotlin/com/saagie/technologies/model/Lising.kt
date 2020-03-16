@@ -22,7 +22,7 @@ fun ContextMetadataWithId.toContextListing() = ContextListing(
 )
 
 fun MetadataDocker?.toOneLine() = when {
-    this != null -> "${image}:${version}"
+    this != null -> "$image:$version"
     else -> null
 }
 
