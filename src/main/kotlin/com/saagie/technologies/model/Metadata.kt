@@ -23,10 +23,26 @@ data class ContextMetadata(
     constructor() : this(null)
 }
 
+data class ContextMetadataWithId(
+    val id: String?,
+    val dockerInfo: MetadataDocker?
+) {
+    constructor() : this(null, null)
+}
+
 data class ContextsMetadata(
     val contexts: List<ContextMetadata> = emptyList()
 ) {
     constructor() : this(emptyList())
+}
+
+data class SimpleMetadataWithContexts(
+    val id: String,
+    val type: String,
+    val dockerInfo: MetadataDocker?,
+    val contexts: List<ContextMetadataWithId>?
+) {
+    constructor() : this("", "", null, null)
 }
 
 data class MetadataDocker(
@@ -34,6 +50,7 @@ data class MetadataDocker(
     val version: String? = null
 ) {
     constructor() : this("", "")
+
     fun imageSnapshot() = "$image:$version"
     fun imagePromote() = "$image:${versionPromote()}"
     fun versionPromote() = version?.split("_")?.first()

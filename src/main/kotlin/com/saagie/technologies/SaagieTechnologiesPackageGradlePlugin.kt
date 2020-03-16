@@ -17,14 +17,20 @@
  */
 package com.saagie.technologies
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.JsonFactory
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.kittinunf.fuel.Fuel
-import com.saagie.technologies.model.ContextMetadata
-import com.saagie.technologies.model.ContextsMetadata
-import com.saagie.technologies.model.MetadataDocker
+import com.saagie.technologies.model.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -145,7 +151,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             val config = project.property("effectiveConfig") as ProjectConfigurationExtension
             val createTempFile = File.createTempFile("technologies", ".zip")
             val path = "${config.info.scm.url}/releases/download/" +
-                "${project.property("version")}/technologies.zip"
+                    "${project.property("version")}/technologies.zip"
             logger.debug("Download assets : $path")
             Fuel.download(path)
                 .fileDestination { _, _ -> createTempFile }
@@ -181,7 +187,10 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                     val dockerInfoFile = File("$it/dockerInfo.yml")
                                     val dockerVersion = when {
                                         dockerInfoFile.exists() -> getJacksonObjectMapper()
-                                            .readValue(dockerInfoFile.inputStream(), ContextMetadata::class.java).dockerInfo?.version
+                                            .readValue(
+                                                dockerInfoFile.inputStream(),
+                                                ContextMetadata::class.java
+                                            ).dockerInfo?.version
                                         else -> null
                                     }
                                     val lines = File("$it/context.yml").readLines()
@@ -190,7 +199,6 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                             0 -> targetMetadata.appendText("\n  - $line")
                                             else -> targetMetadata.appendText("\n    $line")
                                         }
-                                        println("$line : ${line.startsWith("  image:")}")
                                         if (line.startsWith("  image:") && dockerVersion != null) {
                                             targetMetadata.appendText("\n      version: $dockerVersion")
                                         }
@@ -238,7 +246,57 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             "technologies"
                         )
                     }
+                    generateListing(this, metadataFilename)
                 }
+            }
+        }
+    }
+
+    private fun getJacksonYamlObjectMapper(): ObjectMapper =
+        ObjectMapper(
+            YAMLFactory()
+                .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
+                .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
+        ).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
+
+    private fun getJacksonJsonObjectMapper(): ObjectMapper =
+        ObjectMapper(JsonFactory())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(SerializationFeature.INDENT_OUTPUT, true)
+            .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
+
+    private fun generateListing(path: String, metadataFilename: String) {
+        val yamlObjectMapper = getJacksonYamlObjectMapper()
+        val jsonObjectMapper = getJacksonJsonObjectMapper()
+        val dockerImages: MutableList<String> = mutableListOf()
+        val listing = File(path)
+            .walk()
+            .filter { it.name == metadataFilename }
+            .map {
+                yamlObjectMapper.readValue(it, SimpleMetadataWithContexts::class.java)
+            }
+            .map { it.toListing() }
+            .map { techno ->
+                when {
+                    techno.docker != null -> {
+                        dockerImages.add(techno.docker)
+                    }
+                    else -> {
+                        techno.contexts?.forEach { context ->
+                            if (context.docker != null) {
+                                dockerImages.add(context.docker)
+                            }
+                        }
+                    }
+                }
+                techno
+            }
+        jsonObjectMapper.writeValue(File(path + "/docker_listing.json"), listing)
+
+        with(File(path + "/docker_listing.txt")) {
+            dockerImages.forEach {
+                this.appendText(it + "\n")
             }
         }
     }
