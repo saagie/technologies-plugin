@@ -90,8 +90,6 @@ class SaagieTechnologiesGradlePluginKtTest {
                     .build()
             ) {
                 this.version = "1.2.3"
-                val plugin = SaagieTechnologiesGradlePlugin()
-
                 val contextMetadata = ContextMetadata(MetadataDocker("nginx", "1.2.3"))
                 storeMetadata(project, projectDir, contextMetadata)
                 val metadataFinalFile = File("${project.projectDir.absolutePath}/dockerInfo.yml")
