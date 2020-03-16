@@ -73,6 +73,7 @@ config {
     }
 }
 
+
 object VersionInfo {
     const val kotlin = "1.3.70"
     const val jackson = "2.10.3"
@@ -129,7 +130,7 @@ kotlinter {
     ignoreFailures = false
     reporters = arrayOf("html")
     experimentalRules = false
-    disabledRules = arrayOf("import-ordering")
+    disabledRules = arrayOf("import-ordering","no-wildcard-imports")
 }
 
 gradlePlugin {
