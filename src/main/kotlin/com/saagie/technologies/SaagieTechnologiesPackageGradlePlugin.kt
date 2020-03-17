@@ -87,18 +87,20 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     ): Task = project.tasks.create("fixMetadataVersion") {
         dependsOn(downloadAndUnzipReleaseAssets)
         doFirst {
+            val version = (project.property("version") as String)
+            val dockerFormattedVersion = version.replace("+", "_")
+            val newVersion = version.split("+").first()
             metadataFileList.forEach {
                 val metadata = getJacksonObjectMapper()
                     .readValue((File(it)).inputStream(), ContextsMetadata::class.java)
                 val tempFile = createTempFile()
                 val file = File(it)
-                val dockerFormattedVersion = (project.property("version") as String).replace("+", "_")
                 tempFile.printWriter().use { writer ->
                     file.forEachLine { line ->
                         writer.println(
                             when {
                                 line.startsWith("      version: ") && line.endsWith(dockerFormattedVersion)
-                                -> line.replace("-$dockerFormattedVersion", "")
+                                -> line.replace("-$dockerFormattedVersion", "-$newVersion")
                                 else -> line
                             }
                         )
@@ -115,6 +117,14 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 tempFile.copyTo(file, true)
                 logger.info("${file.path} UPDATED")
             }
+            File("technologies")
+                .walk()
+                .filter { it.name == "dockerInfo.yml" }
+                .forEach { file ->
+                    file.readText().let { line ->
+                        file.writeText(line.replace("-$dockerFormattedVersion", "-$newVersion"))
+                    }
+                }
         }
     }
 
