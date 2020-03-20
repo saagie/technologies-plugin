@@ -43,17 +43,21 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     companion object {
         @JvmField
         val TIMEOUT_PUSH_PULL_DOCKER: Long = 10
+        val metadataBaseFilename = "metadata"
+        val technologyBaseFilename = "technology"
+        val dockerInfoBaseFilename = "dockerInfo"
+        val contextBaseFilename = "context"
+        val dockerListing = "docker_listing"
+        val outputDirectory = "tmp-zip"
     }
 
     override fun apply(project: Project) {
         /**
          * PACKAGE
          */
-        val outputDirectory = "tmp-zip"
-        val metadataFilename = "metadata.yml"
 
         val constructMetadata = constructMetadata(project)
-        val packageAllVersionsForPromote = packageAllVersionsForPromote(project, outputDirectory, metadataFilename)
+        val packageAllVersionsForPromote = packageAllVersionsForPromote(project)
         val packageAllVersions = packageAllVersions(project, constructMetadata, packageAllVersionsForPromote)
 
         /**
@@ -119,7 +123,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             }
             File("technologies")
                 .walk()
-                .filter { it.name == "dockerInfo.yml" }
+                .filter { it.name == "$dockerInfoBaseFilename.yml" || it.name == "$dockerInfoBaseFilename.yaml" }
                 .forEach { file ->
                     file.readText().let { line ->
                         file.writeText(line.replace("-$dockerFormattedVersion", "-$newVersion"))
@@ -170,7 +174,10 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             ZipFile(createTempFile).use { zip ->
                 zip.entries().asSequence().forEach { entry ->
                     zip.getInputStream(entry).use { input ->
-                        if (entry.name.endsWith("metadata.yml")) {
+                        if (
+                            entry.name.endsWith("$metadataBaseFilename.yml") ||
+                            entry.name.endsWith("$metadataBaseFilename.yaml")
+                        ) {
                             logger.debug(">> ${entry.name}")
                             metadataFileList.add(entry.name)
                             File(entry.name).outputStream().use { input.copyTo(it) }
@@ -186,15 +193,15 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             logger.info("Construct metadata")
             File(project.rootDir.path + "/technologies").walkTopDown().forEach {
                 when {
-                    it.isADirectoryContainingFile("techno.yml") -> {
-                        val targetMetadata = File("$it/metadata.yml")
+                    it.isADirectoryContainingFile(technologyBaseFilename) -> {
+                        val targetMetadata = File("$it/$metadataBaseFilename.yaml")
                         targetMetadata.delete()
-                        File("$it/techno.yml").copyTo(targetMetadata)
+                        File("$it/$technologyBaseFilename.yaml").checkYamlExtension().copyTo(targetMetadata)
                         targetMetadata.appendText("\ncontexts:")
                         it.walkTopDown().forEach {
                             when {
-                                it.isADirectoryContainingFile("context.yml") -> {
-                                    val dockerInfoFile = File("$it/dockerInfo.yml")
+                                it.isADirectoryContainingFile(contextBaseFilename) -> {
+                                    val dockerInfoFile = File("$it/$dockerInfoBaseFilename.yaml").checkYamlExtension()
                                     val dockerVersion = when {
                                         dockerInfoFile.exists() -> getJacksonObjectMapper()
                                             .readValue(
@@ -203,16 +210,18 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                             ).dockerInfo?.version
                                         else -> null
                                     }
-                                    val lines = File("$it/context.yml").readLines()
-                                    lines.forEachIndexed { index, line ->
-                                        when (index) {
-                                            0 -> targetMetadata.appendText("\n  - $line")
-                                            else -> targetMetadata.appendText("\n    $line")
+                                    File("$it/$contextBaseFilename.yaml")
+                                        .checkYamlExtension()
+                                        .readLines()
+                                        .forEachIndexed { index, line ->
+                                            when (index) {
+                                                0 -> targetMetadata.appendText("\n  - $line")
+                                                else -> targetMetadata.appendText("\n    $line")
+                                            }
+                                            if (line.startsWith("  image:") && dockerVersion != null) {
+                                                targetMetadata.appendText("\n      version: $dockerVersion")
+                                            }
                                         }
-                                        if (line.startsWith("  image:") && dockerVersion != null) {
-                                            targetMetadata.appendText("\n      version: $dockerVersion")
-                                        }
-                                    }
                                 }
                             }
                         }
@@ -223,9 +232,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     }
 
     private fun packageAllVersionsForPromote(
-        project: Project,
-        outputDirectory: String,
-        metadataFilename: String
+        project: Project
     ): Task = project.tasks.create("packageAllVersionsForPromote") {
         doFirst {
             with("${project.rootDir.path}/$outputDirectory/") {
@@ -235,14 +242,16 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 var hasVersion = false
                 File(project.rootDir.path + "/technologies").walkTopDown().forEach {
                     when {
-                        it.isADirectoryContainingFile(metadataFilename) -> {
+                        it.isADirectoryContainingFile(metadataBaseFilename) -> {
                             logger.info("VERSION : ${project.relativePath(it.toPath())}")
                             hasVersion = true
                             File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
 
-                            File("${project.relativePath(it.toPath())}/$metadataFilename").copyTo(
-                                File("$this/${project.relativePath(it.toPath())}/$metadataFilename")
-                            )
+                            File("${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
+                                .checkYamlExtension()
+                                .copyTo(
+                                    File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
+                                )
                         }
                     }
                 }
@@ -256,7 +265,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             "technologies"
                         )
                     }
-                    generateListing(this, metadataFilename)
+                    generateListing(this)
                 }
             }
         }
@@ -276,13 +285,16 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             .configure(SerializationFeature.INDENT_OUTPUT, true)
             .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
-    private fun generateListing(path: String, metadataFilename: String) {
+    private fun generateListing(path: String) {
         val yamlObjectMapper = getJacksonYamlObjectMapper()
         val jsonObjectMapper = getJacksonJsonObjectMapper()
         val dockerImages: MutableList<String> = mutableListOf()
         val listing = File(path)
             .walk()
-            .filter { it.name == metadataFilename }
+            .filter {
+                it.name == "$metadataBaseFilename.yml" ||
+                        it.name == "$metadataBaseFilename.yaml"
+            }
             .map {
                 yamlObjectMapper.readValue(it, SimpleMetadataWithContexts::class.java)
             }
@@ -302,9 +314,9 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 }
                 techno
             }
-        jsonObjectMapper.writeValue(File(path + "/docker_listing.json"), listing)
+        jsonObjectMapper.writeValue(File(path + "/$dockerListing.json"), listing)
 
-        with(File(path + "/docker_listing.txt")) {
+        with(File(path + "/$dockerListing.txt")) {
             dockerImages.forEach {
                 this.appendText(it + "\n")
             }

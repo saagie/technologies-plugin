@@ -92,7 +92,7 @@ class SaagieTechnologiesGradlePluginKtTest {
                 this.version = "1.2.3"
                 val contextMetadata = ContextMetadata(MetadataDocker("nginx", "1.2.3"))
                 storeMetadata(project, projectDir, contextMetadata)
-                val metadataFinalFile = File("${project.projectDir.absolutePath}/dockerInfo.yml")
+                val metadataFinalFile = File("${project.projectDir.absolutePath}/dockerInfo.yaml")
                 assertTrue(metadataFinalFile.exists())
                 assertEquals(
                     """dockerInfo:

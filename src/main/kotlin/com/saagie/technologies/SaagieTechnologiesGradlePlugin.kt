@@ -17,11 +17,7 @@
  */
 package com.saagie.technologies
 
-import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerWaitContainer
+import com.bmuschko.gradle.docker.tasks.container.*
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
@@ -62,10 +58,11 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             dependsOn(pullDockerImage)
             targetImageId(imageTestName)
             hostConfig.autoRemove.set(false)
-            hostConfig.binds.put("${project.projectDir.absolutePath}/image_test.yml", "/workdir/image_test.yml")
             hostConfig.binds.put("/var/run/docker.sock", "/var/run/docker.sock")
             workingDir.set("/workdir")
-            cmd.addAll("test", "--image", imageName, "--config", "/workdir/image_test.yml")
+            val imageTestFile = "${project.projectDir.absolutePath}/image_test".checkYamlExtension()
+            hostConfig.binds.put(imageTestFile, "/workdir/image_test.yaml")
+            cmd.addAll("test", "--image", imageName, "--config", "/workdir/image_test.yaml")
         }
 
         val startContainer = project.tasks.create<DockerStartContainer>("startContainer") {
