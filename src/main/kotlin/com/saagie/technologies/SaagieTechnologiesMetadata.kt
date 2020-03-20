@@ -27,13 +27,13 @@ import com.saagie.technologies.model.ContextMetadata
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import java.io.File
-import java.util.Optional
+import java.util.*
 
 fun generateDockerTag(project: Project, contextMetadata: ContextMetadata) =
     "${contextMetadata.dockerInfo?.image}:${project.generateTag()}"
 
 fun storeMetadata(project: Project, projectDir: File, contextMetadata: ContextMetadata) {
-    val targetMetadata = File("${projectDir.absolutePath}/dockerInfo.yml")
+    val targetMetadata = File("${projectDir.absolutePath}/dockerInfo.yaml").checkYamlExtension()
     targetMetadata.delete()
     targetMetadata.appendText(
         getJacksonObjectMapper().writeValueAsString(
@@ -46,7 +46,9 @@ fun storeMetadata(project: Project, projectDir: File, contextMetadata: ContextMe
 
 fun readContextMetadata(projectDir: File): ContextMetadata =
     getJacksonObjectMapper().readValue(
-        File("${projectDir.absoluteFile}/context.yml").inputStream(),
+        File("${projectDir.absoluteFile}/context.yaml")
+            .checkYamlExtension()
+            .inputStream(),
         ContextMetadata::class.java
     )
 
