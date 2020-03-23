@@ -57,8 +57,8 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
          */
 
         val constructMetadata = constructMetadata(project)
-        val packageAllVersionsForPromote = packageAllVersionsForPromote(project)
-        val packageAllVersions = packageAllVersions(project, constructMetadata, packageAllVersionsForPromote)
+        val packageAllVersionsForPromote = packageAllVersionsForPromote(project, constructMetadata)
+        packageAllVersions(project, packageAllVersionsForPromote)
 
         /**
          * PROMOTE
@@ -66,7 +66,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         val metadataFileList = mutableListOf<String>()
         val downloadAndUnzipReleaseAssets = downloadAndUnzipReleaseAssets(project, metadataFileList)
         val fixMetadataVersion = fixMetadataVersion(project, downloadAndUnzipReleaseAssets, metadataFileList)
-        val promote = promote(project, packageAllVersionsForPromote, fixMetadataVersion)
+        promote(project, packageAllVersionsForPromote, fixMetadataVersion)
     }
 
     private fun promote(
@@ -232,8 +232,10 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     }
 
     private fun packageAllVersionsForPromote(
-        project: Project
+        project: Project,
+        constructMetadata: Task
     ): Task = project.tasks.create("packageAllVersionsForPromote") {
+        dependsOn(constructMetadata)
         doFirst {
             with("${project.rootDir.path}/$outputDirectory/") {
                 val rootZipDir = File(this)
@@ -325,12 +327,10 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
 
     private fun packageAllVersions(
         project: Project,
-        packageAllVersionsForPromote: Task,
-        constructMetadata: Task
+        packageAllVersionsForPromote: Task
     ): Task = project.tasks.create("packageAllVersions") {
         group = "technologies"
         description = "Package all versions"
-        packageAllVersionsForPromote.mustRunAfter(constructMetadata)
-        dependsOn(constructMetadata, packageAllVersionsForPromote)
+        dependsOn(packageAllVersionsForPromote)
     }
 }
