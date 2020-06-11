@@ -38,9 +38,9 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         /**
          * BUILD IMAGES
          */
+        val dockerInfo = readDockerInfo(project.projectDir)
 
-        val contextMetadata = readContextMetadata(project.projectDir)
-        val imageName = generateDockerTag(project, contextMetadata)
+        val imageName = generateDockerTag(project, dockerInfo)
 
         val imageTestName = "gcr.io/gcp-runtimes/container-structure-test:latest"
         var logs = ""
@@ -118,7 +118,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         val generateMetadata = project.tasks.create("generateMetadata") {
             dependsOn(pushImage)
             doLast {
-                storeMetadata(project, project.projectDir, contextMetadata)
+                storeDockerInfo(project, project.projectDir, dockerInfo)
             }
         }
 

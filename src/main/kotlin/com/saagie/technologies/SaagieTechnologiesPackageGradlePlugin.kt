@@ -132,7 +132,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun promoteDockerImage(metadataDocker: MetadataDocker) {
+    private fun promoteDockerImage(dockerInfo: DockerInfo) {
         with(
             DockerClientBuilder
                 .getInstance(
@@ -144,12 +144,12 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 )
                 .build()
         ) {
-            pullImageCmd(metadataDocker.imageSnapshot())
+            pullImageCmd(dockerInfo.imageSnapshot())
                 .exec(PullImageResultCallback())
                 .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
-            tagImageCmd(metadataDocker.imageSnapshot(), metadataDocker.image, metadataDocker.versionPromote())
+            tagImageCmd(dockerInfo.imageSnapshot(), dockerInfo.image, dockerInfo.versionPromote())
                 .exec()
-            pushImageCmd(metadataDocker.imagePromote())
+            pushImageCmd(dockerInfo.imagePromote())
                 .exec(PushImageResultCallback())
                 .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
         }

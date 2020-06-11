@@ -17,8 +17,7 @@
  */
 package com.saagie.technologies
 
-import com.saagie.technologies.model.ContextMetadata
-import com.saagie.technologies.model.MetadataDocker
+import com.saagie.technologies.model.DockerInfo
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -70,7 +69,8 @@ class SaagieTechnologiesGradlePluginKtTest {
                     .build()
             ) {
                 this.version = "1.2.3"
-                assertEquals("${this.name}-${this.getVersionForDocker()}", this.generateTag())
+                val tag: String = "baseTag"
+                assertEquals("$tag-${this.getVersionForDocker()}", this.generateTag(tag))
             }
         }
     }
@@ -89,16 +89,20 @@ class SaagieTechnologiesGradlePluginKtTest {
                     .withName("myproject")
                     .build()
             ) {
-                this.version = "1.2.3"
-                val contextMetadata = ContextMetadata(MetadataDocker("nginx", "1.2.3"))
-                storeMetadata(project, projectDir, contextMetadata)
-                val metadataFinalFile = File("${project.projectDir.absolutePath}/dockerInfo.yaml")
-                assertTrue(metadataFinalFile.exists())
-                assertEquals(
-                    """dockerInfo:
-  image: ${contextMetadata.dockerInfo?.image}
-  version: ${project.name}-${contextMetadata.dockerInfo?.version}""".trimMargin(),
-                    metadataFinalFile.readText().trimIndent()
+                project.setProperty("version", "1.29.0")
+                // following DockerInfo data
+                val dockerInfo = DockerInfo("nginx", "1.2.3", project.version.toString())
+                // Generate data in context.yaml file if exists
+                storeDockerInfo(project, projectDir, dockerInfo)
+                // Checks that generated Data are good
+                val dockerInfoFinalFile = File("${project.projectDir.absolutePath}/dockerInfo.yaml")
+                assertTrue(dockerInfoFinalFile.exists())
+                assertEquals("""
+image: ${dockerInfo.image}
+baseTag: ${dockerInfo.baseTag}
+version: ${dockerInfo.baseTag}-${project.version}
+                    """.trimMargin(),
+                        dockerInfoFinalFile.readText().trimIndent()
                 )
             }
         }

@@ -23,34 +23,33 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.saagie.technologies.model.ContextMetadata
+import com.saagie.technologies.model.DockerInfo
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import java.io.File
 import java.util.*
 
-fun generateDockerTag(project: Project, contextMetadata: ContextMetadata) =
-    "${contextMetadata.dockerInfo?.image}:${project.generateTag()}"
+fun generateDockerTag(project: Project, dockerInfo: DockerInfo) =
+    "${dockerInfo.image}:${project.generateTag(dockerInfo.baseTag)}"
 
-fun storeMetadata(project: Project, projectDir: File, contextMetadata: ContextMetadata) {
-    val targetMetadata = File("${projectDir.absolutePath}/dockerInfo.yaml").checkYamlExtension()
-    targetMetadata.delete()
-    targetMetadata.appendText(
-        getJacksonObjectMapper().writeValueAsString(
-            contextMetadata.copy(
-                dockerInfo = contextMetadata.dockerInfo?.copy(version = project.generateTag())
+// update version in DockeInfo
+fun storeDockerInfo(project: Project, projectDir: File, dockerInfo: DockerInfo) {
+    val targetDockerInfo = File("${projectDir.absolutePath}/dockerInfo.yaml").checkYamlExtension()
+    targetDockerInfo.delete()
+    targetDockerInfo.appendText(
+            getJacksonObjectMapper().writeValueAsString(
+                    dockerInfo.copy(version = project.generateTag(dockerInfo.baseTag))
             )
-        )
     )
 }
 
-fun readContextMetadata(projectDir: File): ContextMetadata =
-    getJacksonObjectMapper().readValue(
-        File("${projectDir.absoluteFile}/context.yaml")
-            .checkYamlExtension()
-            .inputStream(),
-        ContextMetadata::class.java
-    )
+fun readDockerInfo(projectDir: File): DockerInfo =
+        getJacksonObjectMapper().readValue(
+                File("${projectDir.absoluteFile}/dockerInfo.yaml")
+                        .checkYamlExtension()
+                        .inputStream(),
+                DockerInfo::class.java
+        )
 
 fun getJacksonObjectMapper(): ObjectMapper =
     ObjectMapper(
@@ -60,8 +59,10 @@ fun getJacksonObjectMapper(): ObjectMapper =
     ).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
-fun Project.generateTag(): String = "${this.name}-${this.getVersionForDocker()}"
+fun Project.generateTag(tag: String): String = "$tag-${this.getVersionForDocker()}"
+
 fun Project.getVersionForDocker(): String = "${this.rootProject.version}".replace("+", "_")
+
 fun Project.checkEnvVar() {
     listOf("DOCKER_USERNAME", "DOCKER_PASSWORD").forEach {
         if (!Optional.ofNullable(System.getenv(it)).isPresent) {

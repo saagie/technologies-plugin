@@ -17,30 +17,14 @@
  */
 package com.saagie.technologies.model
 
-data class ContextMetadata(
-    val dockerInfo: DockerInfo?
+data class DockerInfo(
+    val image: String,
+    val baseTag: String,
+    val version: String? = baseTag
 ) {
-    constructor() : this(null)
-}
+    constructor() : this("", "")
 
-data class ContextMetadataWithId(
-    val id: String?,
-    val dockerInfo: DockerInfo?
-) {
-    constructor() : this(null, null)
-}
-
-data class ContextsMetadata(
-    val contexts: List<ContextMetadata> = emptyList()
-) {
-    constructor() : this(emptyList())
-}
-
-data class SimpleMetadataWithContexts(
-    val id: String,
-    val type: String,
-    val dockerInfo: DockerInfo?,
-    val contexts: List<ContextMetadataWithId>?
-) {
-    constructor() : this("", "", null, null)
+    fun imageSnapshot() = "$image:$version"
+    fun imagePromote() = "$image:${versionPromote()}"
+    fun versionPromote() = version?.split("_")?.first()
 }
