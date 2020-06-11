@@ -24,7 +24,7 @@ plugins {
     id("com.gradle.plugin-publish") version "0.10.1"
     id("io.gitlab.arturbosch.detekt") version "1.3.1"
     id("org.jmailen.kotlinter") version "2.1.3"
-    id("org.kordamp.gradle.project") version "0.32.0"
+    id("org.kordamp.gradle.project") version "0.38.0"
     kotlin("jvm") version "1.3.70"
 }
 
@@ -83,10 +83,10 @@ config {
 object VersionInfo {
     const val kotlin = "1.3.70"
     const val jackson = "2.10.3"
-    const val kordamp = "0.32.0"
+    const val kordamp = "0.38.0"
     const val junit = "5.5.2"
     const val fuel = "2.2.1"
-    const val gradledocker="6.3.0"
+    const val gradledocker = "6.3.0"
 }
 
 val versions: VersionInfo by extra { VersionInfo }
