@@ -29,16 +29,13 @@ import org.gradle.api.Project
 import java.io.File
 import java.util.*
 
-fun generateDockerTag(project: Project, dockerInfo: DockerInfo) =
-    "${dockerInfo.image}:${project.generateTag(dockerInfo.baseTag)}"
-
 // update version in DockeInfo
 fun storeDockerInfo(project: Project, projectDir: File, dockerInfo: DockerInfo) {
     val targetDockerInfo = File("${projectDir.absolutePath}/dockerInfo.yaml").checkYamlExtension()
     targetDockerInfo.delete()
     targetDockerInfo.appendText(
             getJacksonObjectMapper().writeValueAsString(
-                    dockerInfo.copy(version = project.generateTag(dockerInfo.baseTag))
+                    dockerInfo.copy(version = "${project.rootProject.version}".replace("+", "_"))
             )
     )
 }
@@ -59,11 +56,7 @@ fun getJacksonObjectMapper(): ObjectMapper =
     ).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
-fun Project.generateTag(tag: String): String = "$tag-${this.getVersionForDocker()}"
-
-fun Project.getVersionForDocker(): String = "${this.rootProject.version}".replace("+", "_")
-
-fun Project.checkEnvVar() {
+fun checkEnvVar() {
     listOf("DOCKER_USERNAME", "DOCKER_PASSWORD").forEach {
         if (!Optional.ofNullable(System.getenv(it)).isPresent) {
             throw GradleException("ENV $it is not set")

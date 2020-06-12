@@ -40,14 +40,12 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
          */
         val dockerInfo = readDockerInfo(project.projectDir)
 
-        val imageName = generateDockerTag(project, dockerInfo)
-
         val imageTestName = "gcr.io/gcp-runtimes/container-structure-test:latest"
         var logs = ""
 
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
             this.inputDir.set(File("."))
-            this.images.add(imageName)
+            this.images.add(dockerInfo.tag)
         }
 
         val pullDockerImage = project.tasks.create<DockerPullImage>("pullDockerImage") {
@@ -62,7 +60,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             workingDir.set("/workdir")
             val imageTestFile = "${project.projectDir.absolutePath}/image_test".checkYamlExtension()
             hostConfig.binds.put(imageTestFile, "/workdir/image_test.yaml")
-            cmd.addAll("test", "--image", imageName, "--config", "/workdir/image_test.yaml")
+            cmd.addAll("test", "--image", dockerInfo.tag, "--config", "/workdir/image_test.yaml")
         }
 
         val startContainer = project.tasks.create<DockerStartContainer>("startContainer") {
@@ -105,10 +103,10 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val pushImage = project.tasks.create<DockerPushImage>("pushImage") {
             doFirst {
-                this.project.checkEnvVar()
+                checkEnvVar()
             }
             dependsOn(testImage)
-            this.images.add(imageName)
+            this.images.add(dockerInfo.tag)
             this.registryCredentials {
                 username.set(System.getenv("DOCKER_USERNAME"))
                 password.set(System.getenv("DOCKER_PASSWORD"))

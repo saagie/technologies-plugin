@@ -29,53 +29,6 @@ import java.io.File
 class SaagieTechnologiesGradlePluginKtTest {
 
     @Nested
-    inner class ProjectKotlinExtension {
-
-        @TempDir
-        lateinit var projectdir: File
-
-        @Test
-        fun `generateVersionForDocker with simple version`() {
-            with(
-                ProjectBuilder.builder()
-                    .withProjectDir(projectdir)
-                    .withName("myproject")
-                    .build()
-            ) {
-                this.version = "1.2.3"
-                assertEquals(this.version, this.getVersionForDocker())
-            }
-        }
-
-        @Test
-        fun `generateVersionForDocker with complex version`() {
-            with(
-                ProjectBuilder.builder()
-                    .withProjectDir(projectdir)
-                    .withName("myproject")
-                    .build()
-            ) {
-                this.version = "1.2.3+TEST"
-                assertEquals(this.version.toString().replace("+", "_"), this.getVersionForDocker())
-            }
-        }
-
-        @Test
-        fun `generateTag`() {
-            with(
-                ProjectBuilder.builder()
-                    .withProjectDir(projectdir)
-                    .withName("myproject")
-                    .build()
-            ) {
-                this.version = "1.2.3"
-                val tag: String = "baseTag"
-                assertEquals("$tag-${this.getVersionForDocker()}", this.generateTag(tag))
-            }
-        }
-    }
-
-    @Nested
     inner class StoreMetadata {
 
         @TempDir
@@ -100,7 +53,8 @@ class SaagieTechnologiesGradlePluginKtTest {
                 assertEquals("""
 image: ${dockerInfo.image}
 baseTag: ${dockerInfo.baseTag}
-version: ${dockerInfo.baseTag}-${project.version}
+version: ${project.version}
+tag: ${dockerInfo.baseTag}-${project.version}
                     """.trimMargin(),
                         dockerInfoFinalFile.readText().trimIndent()
                 )

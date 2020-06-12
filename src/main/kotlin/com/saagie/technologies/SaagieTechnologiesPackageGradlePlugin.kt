@@ -144,12 +144,12 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 )
                 .build()
         ) {
-            pullImageCmd(dockerInfo.imageSnapshot())
+            pullImageCmd(dockerInfo.generateDocker())
                 .exec(PullImageResultCallback())
                 .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
-            tagImageCmd(dockerInfo.imageSnapshot(), dockerInfo.image, dockerInfo.versionPromote())
+            tagImageCmd(dockerInfo.generateDocker(), dockerInfo.image, dockerInfo.promoteVersion())
                 .exec()
-            pushImageCmd(dockerInfo.imagePromote())
+            pushImageCmd(dockerInfo.generateDockerPromote())
                 .exec(PushImageResultCallback())
                 .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
         }
@@ -161,7 +161,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     ): Task = project.tasks.create("downloadAndUnzipReleaseAssets") {
 
         doFirst {
-            this.project.checkEnvVar()
+            checkEnvVar()
             val config = project.property("effectiveConfig") as ProjectConfigurationExtension
             val createTempFile = File.createTempFile("technologies", ".zip")
             val path = "${config.info.scm.url}/releases/download/" +
@@ -201,15 +201,6 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                         it.walkTopDown().forEach {
                             when {
                                 it.isADirectoryContainingFile(contextBaseFilename) -> {
-                                    val dockerInfoFile = File("$it/$dockerInfoBaseFilename.yaml").checkYamlExtension()
-                                    val dockerVersion = when {
-                                        dockerInfoFile.exists() -> getJacksonObjectMapper()
-                                            .readValue(
-                                                dockerInfoFile.inputStream(),
-                                                ContextMetadata::class.java
-                                            ).dockerInfo?.version
-                                        else -> null
-                                    }
                                     File("$it/$contextBaseFilename.yaml")
                                         .checkYamlExtension()
                                         .readLines()
@@ -218,10 +209,15 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                                 0 -> targetMetadata.appendText("\n  - $line")
                                                 else -> targetMetadata.appendText("\n    $line")
                                             }
-                                            if (line.startsWith("  image:") && dockerVersion != null) {
-                                                targetMetadata.appendText("\n      version: $dockerVersion")
-                                            }
                                         }
+                                    val dockerInfoFile = File("$it/$dockerInfoBaseFilename.yaml").checkYamlExtension()
+                                    if (dockerInfoFile != null) {
+                                        targetMetadata.appendText("\n    dockerInfo:")
+                                        dockerInfoFile.readLines()
+                                                .forEachIndexed { index, line ->
+                                                        targetMetadata.appendText("\n      $line")
+                                                }
+                                    }
                                 }
                             }
                         }
