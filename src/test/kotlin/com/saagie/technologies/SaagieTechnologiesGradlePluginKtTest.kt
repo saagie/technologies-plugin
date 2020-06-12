@@ -77,7 +77,7 @@ class SaagieTechnologiesGradlePluginKtTest {
             ) {
                 project.setProperty("version", "1.29.0")
                 // following DockerInfo data
-                val dockerInfo = DockerInfo("nginx", "1.2.3", project.version.toString())
+                val dockerInfo = DockerInfo("nginx", "1.2.3")
                 // Generate data in context.yaml file if exists
                 storeDockerInfo(project, dockerInfo)
                 // Checks that generated Data are good
