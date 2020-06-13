@@ -29,16 +29,10 @@ import org.gradle.api.Project
 import java.io.File
 import java.util.*
 
-// update version in DockeInfo
-fun storeDockerInfo(project: Project, projectDir: File, dockerInfo: DockerInfo) {
-    val targetDockerInfo = File("${projectDir.absolutePath}/dockerInfo.yaml").checkYamlExtension()
-    targetDockerInfo.delete()
-    targetDockerInfo.appendText(
-            getJacksonObjectMapper().writeValueAsString(
-                    dockerInfo.copy(version = "${project.rootProject.version}".replace("+", "_"))
-            )
-    )
-}
+fun Project.generateDockerTag(dockerInfo: DockerInfo) =
+        "${dockerInfo?.image}:${dockerInfo?.baseTag}-${getVersionForDocker()}"
+
+fun Project.getVersionForDocker(): String = "${this.rootProject.version}".replace("+", "_")
 
 fun readDockerInfo(projectDir: File): DockerInfo =
         getJacksonObjectMapper().readValue(
@@ -47,6 +41,16 @@ fun readDockerInfo(projectDir: File): DockerInfo =
                         .inputStream(),
                 DockerInfo::class.java
         )
+
+fun storeDockerInfo(project: Project, dockerInfo: DockerInfo) {
+    val targetDockerInfo = File("${project.projectDir.absolutePath}/dockerInfo.yaml").checkYamlExtension()
+    targetDockerInfo.delete()
+    targetDockerInfo.appendText(
+            getJacksonObjectMapper().writeValueAsString(
+                    dockerInfo.copy(version = "${project.getVersionForDocker()}")
+            )
+    )
+}
 
 fun getJacksonObjectMapper(): ObjectMapper =
     ObjectMapper(

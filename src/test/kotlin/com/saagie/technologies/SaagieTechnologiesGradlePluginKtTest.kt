@@ -29,6 +29,39 @@ import java.io.File
 class SaagieTechnologiesGradlePluginKtTest {
 
     @Nested
+    inner class ProjectKotlinExtension {
+
+        @TempDir
+        lateinit var projectdir: File
+
+        @Test
+        fun `generateVersionForDocker with simple version`() {
+            with(
+                    ProjectBuilder.builder()
+                            .withProjectDir(projectdir)
+                            .withName("myproject")
+                            .build()
+            ) {
+                this.version = "1.2.3"
+                assertEquals(this.version, this.getVersionForDocker())
+            }
+        }
+
+        @Test
+        fun `generateVersionForDocker with complex version`() {
+            with(
+                    ProjectBuilder.builder()
+                            .withProjectDir(projectdir)
+                            .withName("myproject")
+                            .build()
+            ) {
+                this.version = "1.2.3+TEST"
+                assertEquals(this.version.toString().replace("+", "_"), this.getVersionForDocker())
+            }
+        }
+    }
+
+    @Nested
     inner class StoreMetadata {
 
         @TempDir
@@ -46,7 +79,7 @@ class SaagieTechnologiesGradlePluginKtTest {
                 // following DockerInfo data
                 val dockerInfo = DockerInfo("nginx", "1.2.3", project.version.toString())
                 // Generate data in context.yaml file if exists
-                storeDockerInfo(project, projectDir, dockerInfo)
+                storeDockerInfo(project, dockerInfo)
                 // Checks that generated Data are good
                 val dockerInfoFinalFile = File("${project.projectDir.absolutePath}/dockerInfo.yaml")
                 assertTrue(dockerInfoFinalFile.exists())

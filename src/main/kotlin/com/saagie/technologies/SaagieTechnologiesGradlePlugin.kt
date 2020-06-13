@@ -39,13 +39,14 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
          * BUILD IMAGES
          */
         val dockerInfo = readDockerInfo(project.projectDir)
+        val imageName = project.generateDockerTag(dockerInfo)
 
         val imageTestName = "gcr.io/gcp-runtimes/container-structure-test:latest"
         var logs = ""
 
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
             this.inputDir.set(File("."))
-            this.images.add(dockerInfo.tag)
+            this.images.add(imageName)
         }
 
         val pullDockerImage = project.tasks.create<DockerPullImage>("pullDockerImage") {
@@ -60,7 +61,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             workingDir.set("/workdir")
             val imageTestFile = "${project.projectDir.absolutePath}/image_test".checkYamlExtension()
             hostConfig.binds.put(imageTestFile, "/workdir/image_test.yaml")
-            cmd.addAll("test", "--image", dockerInfo.tag, "--config", "/workdir/image_test.yaml")
+            cmd.addAll("test", "--image", imageName, "--config", "/workdir/image_test.yaml")
         }
 
         val startContainer = project.tasks.create<DockerStartContainer>("startContainer") {
@@ -106,24 +107,24 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
                 checkEnvVar()
             }
             dependsOn(testImage)
-            this.images.add(dockerInfo.tag)
+            this.images.add(imageName)
             this.registryCredentials {
                 username.set(System.getenv("DOCKER_USERNAME"))
                 password.set(System.getenv("DOCKER_PASSWORD"))
             }
         }
 
-        val generateMetadata = project.tasks.create("generateMetadata") {
+        val generateDockerInfo = project.tasks.create("generateDockerInfo") {
             dependsOn(pushImage)
             doLast {
-                storeDockerInfo(project, project.projectDir, dockerInfo)
+                storeDockerInfo(project, dockerInfo)
             }
         }
 
         val buildDockerImage = project.tasks.create("buildDockerImage") {
             group = "technologies"
             description = "Build techno"
-            dependsOn(generateMetadata)
+            dependsOn(generateDockerInfo)
         }
     }
 }
