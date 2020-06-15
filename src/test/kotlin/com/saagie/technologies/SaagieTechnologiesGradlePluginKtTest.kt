@@ -86,8 +86,8 @@ class SaagieTechnologiesGradlePluginKtTest {
                 assertEquals("""
 image: ${dockerInfo.image}
 baseTag: ${dockerInfo.baseTag}
-version: ${project.version}
-tag: ${dockerInfo.baseTag}-${project.version}
+dynamicVersion: ${project.version}
+version: ${dockerInfo.baseTag}-${project.version}
                     """.trimMargin(),
                         dockerInfoFinalFile.readText().trimIndent()
                 )

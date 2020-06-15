@@ -20,14 +20,14 @@ package com.saagie.technologies.model
 data class DockerInfo(
     val image: String,
     val baseTag: String,
-    val version: String? = null,
-    val tag: String = "$baseTag-$version"
+    val dynamicVersion: String? = null,
+    val version: String = "$baseTag-$dynamicVersion"
 ) {
     constructor() : this("", "")
 
-    fun generateDocker() = "$image:$baseTag-$version".removeIllegalDockerCharacters()
+    fun generateDocker() = "$image:$baseTag-$dynamicVersion".removeIllegalDockerCharacters()
     fun generateDockerPromote() = "$image:$baseTag-${promoteVersion()}".removeIllegalDockerCharacters()
-    fun promoteVersion() = "$baseTag-${version?.removeBranchName()}"
+    fun promoteVersion() = "$baseTag-${dynamicVersion?.removeBranchName()}"
 }
 
 private fun String.removeIllegalDockerCharacters() = this.replace("+", "_")

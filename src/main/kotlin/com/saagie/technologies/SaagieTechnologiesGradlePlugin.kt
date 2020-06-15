@@ -92,6 +92,9 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
                 if (exitCode != 0) {
                     logger.error(logs)
                     throw GradleException("Tests on ${project.name} failed")
+                } else {
+                    logger.error(logs)
+                    logger.error(" *** TESTS SUCCESFULL ***")
                 }
             }
             finalizedBy(removeContainer)

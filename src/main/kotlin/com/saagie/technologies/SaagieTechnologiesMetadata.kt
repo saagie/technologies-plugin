@@ -47,7 +47,7 @@ fun storeDockerInfo(project: Project, dockerInfo: DockerInfo) {
     targetDockerInfo.delete()
     targetDockerInfo.appendText(
             getJacksonObjectMapper().writeValueAsString(
-                    dockerInfo.copy(version = "${project.getVersionForDocker()}")
+                    dockerInfo.copy(dynamicVersion = "${project.getVersionForDocker()}")
             )
     )
 }
