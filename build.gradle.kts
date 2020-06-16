@@ -21,7 +21,7 @@ plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "0.10.1"
+    id("com.gradle.plugin-publish") version "0.12.0"
     id("io.gitlab.arturbosch.detekt") version "1.3.1"
     id("org.jmailen.kotlinter") version "2.1.3"
     id("org.kordamp.gradle.project") version "0.38.0"
