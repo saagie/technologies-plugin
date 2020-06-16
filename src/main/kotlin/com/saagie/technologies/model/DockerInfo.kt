@@ -17,30 +17,19 @@
  */
 package com.saagie.technologies.model
 
-data class ContextMetadata(
-    val dockerInfo: DockerInfo?
+data class DockerInfo(
+    val image: String,
+    val baseTag: String,
+    val dynamicVersion: String? = null,
+    val version: String = "$baseTag-$dynamicVersion"
 ) {
-    constructor() : this(null)
+    constructor() : this("", "")
+
+    fun generateDocker() = "$image:$version".removeIllegalDockerCharacters()
+    fun generateDockerPromote() = "$image:$baseTag-${promoteVersion()}".removeIllegalDockerCharacters()
+    fun promoteVersion() = "$baseTag-${dynamicVersion?.removeBranchName()}"
 }
 
-data class ContextMetadataWithId(
-    val id: String?,
-    val dockerInfo: DockerInfo?
-) {
-    constructor() : this(null, null)
-}
+private fun String.removeIllegalDockerCharacters() = this.replace("+", "_")
 
-data class ContextsMetadata(
-    val contexts: List<ContextMetadata> = emptyList()
-) {
-    constructor() : this(emptyList())
-}
-
-data class SimpleMetadataWithContexts(
-    val id: String,
-    val type: String,
-    val dockerInfo: DockerInfo?,
-    val contexts: List<ContextMetadataWithId>?
-) {
-    constructor() : this("", "", null, null)
-}
+private fun String.removeBranchName() = this.split("_")?.first()

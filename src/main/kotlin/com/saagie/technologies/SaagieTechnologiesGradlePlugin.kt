@@ -38,9 +38,8 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         /**
          * BUILD IMAGES
          */
-
-        val contextMetadata = readContextMetadata(project.projectDir)
-        val imageName = generateDockerTag(project, contextMetadata)
+        val dockerInfo = readDockerInfo(project.projectDir)
+        val imageName = project.generateDockerTag(dockerInfo)
 
         val imageTestName = "gcr.io/gcp-runtimes/container-structure-test:latest"
         var logs = ""
@@ -93,6 +92,9 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
                 if (exitCode != 0) {
                     logger.error(logs)
                     throw GradleException("Tests on ${project.name} failed")
+                } else {
+                    logger.error(logs)
+                    logger.error(" *** TESTS SUCCESFULL ***")
                 }
             }
             finalizedBy(removeContainer)
@@ -105,7 +107,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val pushImage = project.tasks.create<DockerPushImage>("pushImage") {
             doFirst {
-                this.project.checkEnvVar()
+                checkEnvVar()
             }
             dependsOn(testImage)
             this.images.add(imageName)
@@ -115,17 +117,17 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             }
         }
 
-        val generateMetadata = project.tasks.create("generateMetadata") {
+        val generateDockerInfo = project.tasks.create("generateDockerInfo") {
             dependsOn(pushImage)
             doLast {
-                storeMetadata(project, project.projectDir, contextMetadata)
+                storeDockerInfo(project, dockerInfo)
             }
         }
 
         val buildDockerImage = project.tasks.create("buildDockerImage") {
             group = "technologies"
             description = "Build techno"
-            dependsOn(generateMetadata)
+            dependsOn(generateDockerInfo)
         }
     }
 }
