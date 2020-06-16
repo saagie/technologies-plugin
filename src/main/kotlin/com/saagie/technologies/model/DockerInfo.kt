@@ -25,7 +25,7 @@ data class DockerInfo(
 ) {
     constructor() : this("", "")
 
-    fun generateDocker() = "$image:$baseTag-$dynamicVersion".removeIllegalDockerCharacters()
+    fun generateDocker() = "$image:$version".removeIllegalDockerCharacters()
     fun generateDockerPromote() = "$image:$baseTag-${promoteVersion()}".removeIllegalDockerCharacters()
     fun promoteVersion() = "$baseTag-${dynamicVersion?.removeBranchName()}"
 }
