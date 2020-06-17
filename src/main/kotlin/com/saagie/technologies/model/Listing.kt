@@ -39,7 +39,7 @@ fun ContextMetadataWithId.toContextListing() = ContextListing(
 )
 
 fun DockerInfo?.toOneLine() = when {
-    this != null -> "$image:$dynamicVersion"
+    this != null -> "$image:$version"
     else -> null
 }
 
