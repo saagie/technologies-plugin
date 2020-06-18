@@ -32,4 +32,4 @@ data class DockerInfo(
 
 private fun String.removeIllegalDockerCharacters() = this.replace("+", "_")
 
-private fun String.removeBranchName() = this.split("_")?.first()
+private fun String.removeBranchName() = this.split("_").first()

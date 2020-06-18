@@ -46,12 +46,12 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     companion object {
         @JvmField
         val TIMEOUT_PUSH_PULL_DOCKER: Long = 10
-        val metadataBaseFilename = "metadata"
-        val technologyBaseFilename = "technology"
-        val dockerInfoBaseFilename = "dockerInfo"
-        val contextBaseFilename = "context"
-        val dockerListing = "docker_listing"
-        val outputDirectory = "tmp-zip"
+        const val metadataBaseFilename = "metadata"
+        const val technologyBaseFilename = "technology"
+        const val dockerInfoBaseFilename = "dockerInfo"
+        const val contextBaseFilename = "context"
+        const val dockerListing = "docker_listing"
+        const val outputDirectory = "tmp-zip"
     }
 
     override fun apply(project: Project) {
@@ -244,10 +244,10 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
 
                             File("${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
-                                    .checkYamlExtension()
-                                    .copyTo(
-                                            File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
-                                    )
+                                .checkYamlExtension()
+                                .copyTo(
+                                    File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
+                                )
                         }
                     }
                 }

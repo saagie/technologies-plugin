@@ -30,7 +30,7 @@ import java.io.File
 import java.util.*
 
 fun Project.generateDockerTag(dockerInfo: DockerInfo) =
-        "${dockerInfo?.image}:${dockerInfo?.baseTag}-${getVersionForDocker()}"
+        "${dockerInfo.image}:${dockerInfo.baseTag}-${getVersionForDocker()}"
 
 fun Project.getVersionForDocker(): String = "${this.rootProject.version}".replace("+", "_")
 
