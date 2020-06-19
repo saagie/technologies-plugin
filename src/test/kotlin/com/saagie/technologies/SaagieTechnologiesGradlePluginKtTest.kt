@@ -42,7 +42,7 @@ class SaagieTechnologiesGradlePluginKtTest {
                             .withName("myproject")
                             .build()
             ) {
-                this.version = "1.2.3"
+                this.version = "1.2.4"
                 assertEquals(this.version, this.getVersionForDocker())
             }
         }
