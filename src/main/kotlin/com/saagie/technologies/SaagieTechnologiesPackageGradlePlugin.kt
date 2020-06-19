@@ -200,7 +200,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     targetMetadata.delete()
                     File("$it/$technologyBaseFilename.yaml").checkYamlExtension().copyTo(targetMetadata)
                     targetMetadata.appendText("\ncontexts:")
-                    it.walkTopDown().forEach { file ->
+                    it.walkTopDown().sorted().forEach { file ->
                         if (file.isADirectoryContainingFile(contextBaseFilename)) {
                             File("$file/$contextBaseFilename.yaml")
                                     .checkYamlExtension()
