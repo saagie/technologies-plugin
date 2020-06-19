@@ -26,6 +26,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 class SaagieTechnologiesGradlePlugin : Plugin<Project> {
     companion object {
@@ -84,8 +85,22 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             }
         }
 
+        fun String.runCommand(workingDir: File = File("./")): String {
+            val parts = this.split("\\s".toRegex())
+            @Suppress("SpreadOperator")
+            val proc = ProcessBuilder(*parts.toTypedArray())
+                    .directory(workingDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
+            proc.waitFor(1, TimeUnit.MINUTES)
+            return proc.inputStream.bufferedReader().readText().trim()
+        }
+
+        val spaceLeft = "df -h"
+
         val buildWaitContainer = project.tasks.create<DockerWaitContainer>("buildWaitContainer") {
-            dependsOn(logContainer)
+            logger.warn(spaceLeft.runCommand())
             targetContainerId(createContainer.containerId)
             awaitStatusTimeout.set(TIMEOUT_TEST_CONTAINER)
             doLast {
