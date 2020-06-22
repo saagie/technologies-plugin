@@ -37,13 +37,14 @@ import com.saagie.technologies.model.toListing
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.kordamp.gradle.plugin.base.ProjectConfigurationExtension
+import org.kordamp.gradle.util.PluginUtils
 import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipFile
 
 class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     companion object {
+        @Suppress("MayBeConst")
         @JvmField
         val TIMEOUT_PUSH_PULL_DOCKER: Long = 10
         const val metadataBaseFilename = "metadata"
@@ -165,7 +166,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
 
         doFirst {
             checkEnvVar()
-            val config = project.property("effectiveConfig") as ProjectConfigurationExtension
+            val config = PluginUtils.resolveConfig(project)
             val createTempFile = File.createTempFile("technologies", ".zip")
             val path = "${config.info.scm.url}/releases/download/" +
                     "${project.property("version")}/technologies.zip"
