@@ -26,10 +26,12 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
 import java.io.File
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class SaagieTechnologiesGradlePlugin : Plugin<Project> {
     companion object {
+        @Suppress("MayBeConst")
         @JvmField
         val TIMEOUT_TEST_CONTAINER = 10
     }
