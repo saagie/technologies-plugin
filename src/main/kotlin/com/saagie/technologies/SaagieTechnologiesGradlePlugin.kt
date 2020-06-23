@@ -102,6 +102,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         val spaceLeft = "df -h"
 
         val buildWaitContainer = project.tasks.create<DockerWaitContainer>("buildWaitContainer") {
+            dependsOn(logContainer)
             logger.warn(spaceLeft.runCommand())
             targetContainerId(createContainer.containerId)
             awaitStatusTimeout.set(TIMEOUT_TEST_CONTAINER)
