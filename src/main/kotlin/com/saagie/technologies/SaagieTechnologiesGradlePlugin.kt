@@ -38,6 +38,20 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
 
+        fun String.runCommand(workingDir: File = File("./")): String {
+            val parts = this.split("\\s".toRegex())
+            @Suppress("SpreadOperator")
+            val proc = ProcessBuilder(*parts.toTypedArray())
+                    .directory(workingDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
+            proc.waitFor(1, TimeUnit.MINUTES)
+            return proc.inputStream.bufferedReader().readText().trim()
+        }
+
+        val spaceLeft = "df -h"
+
         /**
          * BUILD IMAGES
          */
@@ -48,16 +62,37 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         var logs = ""
 
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
+            doFirst {
+                logger.warn(" *** Before buildImage ")
+                logger.warn(spaceLeft.runCommand())
+            }
+            this.noCache.set(true)
             this.inputDir.set(File("."))
             this.images.add(imageName)
+            doLast {
+                logger.warn(" *** After buildImage ")
+                logger.warn(spaceLeft.runCommand())
+            }
         }
 
         val pullDockerImage = project.tasks.create<DockerPullImage>("pullDockerImage") {
+            doFirst {
+                logger.warn(" *** Before pullDockerImage ")
+                logger.warn(spaceLeft.runCommand())
+            }
             image.set(imageTestName)
+            doLast {
+                logger.warn(" *** After pullDockerImage ")
+                logger.warn(spaceLeft.runCommand())
+            }
         }
 
         val createContainer = project.tasks.create<DockerCreateContainer>("createContainer") {
             dependsOn(pullDockerImage)
+            doFirst {
+                logger.warn(" *** Before createContainer ")
+                logger.warn(spaceLeft.runCommand())
+            }
             targetImageId(imageTestName)
             hostConfig.autoRemove.set(false)
             hostConfig.binds.put("/var/run/docker.sock", "/var/run/docker.sock")
@@ -65,6 +100,10 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             val imageTestFile = "${project.projectDir.absolutePath}/image_test".checkYamlExtension()
             hostConfig.binds.put(imageTestFile, "/workdir/image_test.yaml")
             cmd.addAll("test", "--image", imageName, "--config", "/workdir/image_test.yaml")
+            doLast {
+                logger.warn(" *** After createContainer ")
+                logger.warn(spaceLeft.runCommand())
+            }
         }
 
         val startContainer = project.tasks.create<DockerStartContainer>("startContainer") {
@@ -86,27 +125,17 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
                 logs += "$this \n"
             }
         }
-
-        fun String.runCommand(workingDir: File = File("./")): String {
-            val parts = this.split("\\s".toRegex())
-            @Suppress("SpreadOperator")
-            val proc = ProcessBuilder(*parts.toTypedArray())
-                    .directory(workingDir)
-                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                    .redirectError(ProcessBuilder.Redirect.PIPE)
-                    .start()
-            proc.waitFor(1, TimeUnit.MINUTES)
-            return proc.inputStream.bufferedReader().readText().trim()
-        }
-
-        val spaceLeft = "df -h"
-
         val buildWaitContainer = project.tasks.create<DockerWaitContainer>("buildWaitContainer") {
             dependsOn(logContainer)
-            logger.warn(spaceLeft.runCommand())
+            doFirst {
+                logger.warn(" *** Before buildWaitContainer ")
+                logger.warn(spaceLeft.runCommand())
+            }
             targetContainerId(createContainer.containerId)
             awaitStatusTimeout.set(TIMEOUT_TEST_CONTAINER)
             doLast {
+                logger.warn(" *** After buildWaitContainer ")
+                logger.warn(spaceLeft.runCommand())
                 if (exitCode != 0) {
                     logger.error(logs)
                     throw GradleException("Tests on ${project.name} failed")
@@ -118,6 +147,11 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val testImage = project.tasks.create("testImage") {
             dependsOn(buildImage, buildWaitContainer)
+            startContainer.mustRunAfter(buildImage)
+        }
+
+        val testNoBuildImage = project.tasks.create("testNoBuildImage") {
+            dependsOn(buildWaitContainer)
             startContainer.mustRunAfter(buildImage)
         }
 
