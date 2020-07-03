@@ -74,11 +74,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val createContainer = project.tasks.create<DockerCreateContainer>("createContainer") {
             dependsOn(pullDockerImage)
-            doFirst {
-                if (project.projectDir.absoluteFile.toPath().toString().contains("/innerContexts/")) {
-                    File("${project.projectDir.parent}/image_test.yaml").copyTo(File("${project.projectDir}/image_test.yaml"))
-                }
-            }
             targetImageId(imageTestName)
             hostConfig.autoRemove.set(false)
             hostConfig.binds.put("/var/run/docker.sock", "/var/run/docker.sock")
@@ -86,11 +81,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             val imageTestFile = "${project.projectDir.absolutePath}/image_test".checkYamlExtension()
             hostConfig.binds.put(imageTestFile, "/workdir/image_test.yaml")
             cmd.addAll("test", "--image", imageName, "--config", "/workdir/image_test.yaml")
-            doLast {
-                if (project.projectDir.absoluteFile.toPath().toString().contains("/innerContexts/")) {
-                    File("${project.projectDir}/image_test.yaml").delete()
-                }
-            }
         }
 
         val startContainer = project.tasks.create<DockerStartContainer>("startContainer") {
