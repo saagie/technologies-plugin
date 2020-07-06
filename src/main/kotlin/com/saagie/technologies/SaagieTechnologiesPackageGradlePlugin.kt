@@ -51,6 +51,8 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         const val technologyBaseFilename = "technology"
         const val dockerInfoBaseFilename = "dockerInfo"
         const val contextBaseFilename = "context"
+        const val innerContextsDirectory = "innerContexts"
+        const val innerContextBaseFilename = "innerContext"
         const val dockerListing = "docker_listing"
         const val outputDirectory = "tmp-zip"
     }
@@ -202,26 +204,45 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     File("$it/$technologyBaseFilename.yaml").checkYamlExtension().copyTo(targetMetadata)
                     targetMetadata.appendText("\ncontexts:")
                     it.walkTopDown().sorted().forEach { file ->
-                        if (file.isADirectoryContainingFile(contextBaseFilename)) {
-                            File("$file/$contextBaseFilename.yaml")
-                                    .checkYamlExtension()
-                                    .readLines()
-                                    .forEachIndexed { index, line ->
-                                        when (index) {
-                                            0 -> targetMetadata.appendText("\n  - $line")
-                                            else -> targetMetadata.appendText("\n    $line")
-                                        }
-                                    }
-                            if (file.isADirectoryContainingFile(dockerInfoBaseFilename)) {
-                                val dockerInfo = readDockerInfo(file)
-                                targetMetadata.appendText("\n    dockerInfo:")
-                                targetMetadata.appendText("\n      image: ${dockerInfo.image}")
-                                targetMetadata.appendText("\n      baseTag: ${dockerInfo.baseTag}")
-                                targetMetadata.appendText("\n      version: ${dockerInfo.version}")
+                        run {
+                            val indent = if (file.absolutePath.contains(innerContextsDirectory))
+                                if (file.isADirectoryContainingFile(innerContextBaseFilename)) "        "
+                                else "    "
+                            else ""
+                            buildContextMetadata(contextBaseFilename, file, targetMetadata, indent)
+                            if (File("$file/$innerContextsDirectory").exists()) {
+                                targetMetadata.appendText("\n    innerContexts:")
+                            }
+                            if (file.absolutePath.contains(innerContextsDirectory)) {
+                                if (file.isADirectoryContainingFile(contextBaseFilename)) {
+                                    targetMetadata.appendText("\n        innerContexts:")
+                                }
+                                buildContextMetadata(innerContextBaseFilename, file, targetMetadata, indent)
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun buildContextMetadata(contextName: String, file: File, targetMetadata: File, ident: String) {
+        if (file.isADirectoryContainingFile(contextName)) {
+            File("$file/$contextName.yaml")
+                    .checkYamlExtension()
+                    .readLines()
+                    .forEachIndexed { index, line ->
+                        when (index) {
+                            0 -> targetMetadata.appendText("\n$ident  - $line")
+                            else -> targetMetadata.appendText("\n$ident    $line")
+                        }
+                    }
+            if (file.isADirectoryContainingFile(dockerInfoBaseFilename)) {
+                val dockerInfo = readDockerInfo(file)
+                targetMetadata.appendText("\n$ident    dockerInfo:")
+                targetMetadata.appendText("\n$ident      image: ${dockerInfo.image}")
+                targetMetadata.appendText("\n$ident      baseTag: ${dockerInfo.baseTag}")
+                targetMetadata.appendText("\n$ident      version: ${dockerInfo.version}")
             }
         }
     }
