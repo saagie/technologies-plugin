@@ -17,17 +17,24 @@
  */
 package com.saagie.technologies.model
 
-data class ContextMetadata(
+data class FinalContextMetadata(
     val dockerInfo: DockerInfo?
 ) {
     constructor() : this(null)
 }
 
-data class ContextMetadataWithId(
-    val id: String?,
-    val dockerInfo: DockerInfo?
+data class InnerContextMetadata(
+    val dockerInfo: DockerInfo?,
+    val innerContexts: List<FinalContextMetadata>?
 ) {
-    constructor() : this(null, null)
+    constructor() : this(null, emptyList())
+}
+
+data class ContextMetadata(
+    val dockerInfo: DockerInfo?,
+    val innerContexts: List<InnerContextMetadata>?
+) {
+    constructor() : this(null, emptyList())
 }
 
 data class ContextsMetadata(
@@ -36,11 +43,35 @@ data class ContextsMetadata(
     constructor() : this(emptyList())
 }
 
+data class FinalContextMetadataWithId(
+    val id: String?,
+    val dockerInfo: DockerInfo?
+) {
+    constructor() : this(null, null)
+}
+
+data class InnerContextMetadataWithId(
+    val id: String?,
+    val dockerInfo: DockerInfo?,
+    val innerContexts: List<FinalContextMetadataWithId>?
+
+) {
+    constructor() : this(null, null, emptyList())
+}
+
+data class ContextMetadataWithId(
+    val id: String?,
+    val dockerInfo: DockerInfo?,
+    val innerContexts: List<InnerContextMetadataWithId>?
+) {
+    constructor() : this(null, null, emptyList())
+}
+
 data class SimpleMetadataWithContexts(
     val id: String,
     val type: String,
     val dockerInfo: DockerInfo?,
     val contexts: List<ContextMetadataWithId>?
 ) {
-    constructor() : this("", "", null, null)
+    constructor() : this("", "", null, emptyList())
 }
