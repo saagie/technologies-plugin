@@ -49,9 +49,9 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
             doFirst {
                 if (project.projectDir.absoluteFile.toPath().toString().contains("/innerContexts/")) {
-                    File("${project.projectDir.parent}/Dockerfile").copyTo(File("${project.projectDir}/Dockerfile"))
+                    File("${project.projectDir.parent}/Dockerfile").copyTo(File("${project.projectDir}/Dockerfile"), true)
                     if (File("${project.projectDir.parent}/entrypoint.sh").exists()) {
-                        File("${project.projectDir.parent}/entrypoint.sh").copyTo(File("${project.projectDir}/entrypoint.sh"))
+                        File("${project.projectDir.parent}/entrypoint.sh").copyTo(File("${project.projectDir}/entrypoint.sh"), true)
                     }
                 }
             }
@@ -118,11 +118,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val testImage = project.tasks.create("testImage") {
             dependsOn(buildImage, buildWaitContainer)
-            startContainer.mustRunAfter(buildImage)
-        }
-
-        val testNoBuildImage = project.tasks.create("testNoBuildImage") {
-            dependsOn(buildWaitContainer)
             startContainer.mustRunAfter(buildImage)
         }
 

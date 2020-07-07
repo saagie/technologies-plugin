@@ -30,10 +30,7 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.kittinunf.fuel.Fuel
-import com.saagie.technologies.model.ContextsMetadata
-import com.saagie.technologies.model.DockerInfo
-import com.saagie.technologies.model.SimpleMetadataWithContexts
-import com.saagie.technologies.model.toListing
+import com.saagie.technologies.model.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -61,7 +58,6 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         /**
          * PACKAGE
          */
-
         val constructMetadata = constructMetadata(project)
         val packageAllVersionsForPromote = packageAllVersionsForPromote(project, constructMetadata)
         packageAllVersions(project, packageAllVersionsForPromote)
@@ -326,6 +322,13 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             techno.contexts?.forEach { context ->
                                 if (context.docker != null) {
                                     dockerImages.add(context.docker)
+                                }
+                                context.innerContexts?.forEach { innerContext ->
+                                    innerContext.innerContexts?.forEach { finalContext ->
+                                        if (finalContext.docker != null) {
+                                            dockerImages.add(finalContext.docker)
+                                        }
+                                    }
                                 }
                             }
                         }

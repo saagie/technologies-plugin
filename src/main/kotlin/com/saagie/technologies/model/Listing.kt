@@ -23,10 +23,25 @@ data class Listing(
     val docker: String?,
     val contexts: List<ContextListing>?
 ) {
-    constructor() : this("", "", null, null)
+    constructor() : this("", "", null, emptyList())
 }
 
 data class ContextListing(
+    val id: String,
+    val docker: String?,
+    val innerContexts: List<InnerContextListing>?
+) {
+    constructor() : this("", null, emptyList())
+}
+
+data class InnerContextListing(
+    val id: String,
+    val innerContexts: List<FinalContextListing>?
+) {
+    constructor() : this("", emptyList())
+}
+
+data class FinalContextListing(
     val id: String,
     val docker: String?
 ) {
@@ -35,7 +50,18 @@ data class ContextListing(
 
 fun ContextMetadataWithId.toContextListing() = ContextListing(
     id = this.id ?: "",
-    docker = this.dockerInfo.toOneLine()
+    docker = this.dockerInfo.toOneLine(),
+    innerContexts = this.innerContexts?.map { it.toInnerContextListing() }
+)
+
+fun InnerContextMetadataWithId.toInnerContextListing() = InnerContextListing(
+        id = this.id ?: "",
+        innerContexts = this.innerContexts?.map { it.toFinalContextListing() }
+)
+
+fun FinalContextMetadataWithId.toFinalContextListing() = FinalContextListing(
+        id = this.id ?: "",
+        docker = this.dockerInfo.toOneLine()
 )
 
 fun DockerInfo?.toOneLine() = when {
