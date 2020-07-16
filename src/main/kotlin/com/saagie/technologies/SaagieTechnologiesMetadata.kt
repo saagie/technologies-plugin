@@ -29,10 +29,12 @@ import org.gradle.api.Project
 import java.io.File
 import java.util.*
 
-fun Project.generateDockerTag(dockerInfo: DockerInfo) =
+fun Project.generateDockerTag(dockerInfo: DockerInfo): String =
         "${dockerInfo.image}:${dockerInfo.baseTag}-${getVersionForDocker()}"
 
-fun Project.getVersionForDocker(): String = "${this.rootProject.version}".replace("+", "_")
+fun Project.getVersionForDocker(): String = "${this.rootProject.version}"
+        .replace("+", "_")
+        .replace("/", "-")
 
 fun readDockerInfo(projectDir: File): DockerInfo =
         getJacksonObjectMapper().readValue(
