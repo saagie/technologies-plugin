@@ -34,6 +34,7 @@ import com.saagie.technologies.model.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.kotlin.dsl.support.zipTo
 import org.kordamp.gradle.util.PluginUtils
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -96,6 +97,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             val version = (project.property("version") as String)
             val dockerFormattedVersion = version.replace("+", "_")
             val newVersion = version.split("+").first()
+            logger.info("PROMOTING from ($dockerFormattedVersion) to ==> [$newVersion]")
             metadataFileList.forEach {
                 val metadata = getJacksonObjectMapper()
                         .readValue((File(it)).inputStream(), ContextsMetadata::class.java)
@@ -113,15 +115,25 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                 }
                 metadata.contexts.forEach { context ->
-                    if (context.dockerInfo?.dynamicVersion != null &&
-                            context.dockerInfo.dynamicVersion.endsWith(dockerFormattedVersion)
-                    ) {
-                        logger.info("$it => ${context.dockerInfo.dynamicVersion}")
-                        promoteDockerImage(context.dockerInfo)
+                    run {
+                        fun checkVersionAndPromote(dockerInfo: DockerInfo?) {
+                            if (dockerInfo?.version != null && dockerInfo.version.endsWith(dockerFormattedVersion)) {
+                                logger.info("\t\t${it.toString()
+                                        .replace("technologies/job/", "")
+                                        .replace("/metadata.yaml", "")} => ${dockerInfo.version}")
+                                promoteDockerImage(dockerInfo)
+                            }
+                        }
+                        checkVersionAndPromote(context.dockerInfo)
+                        context.innerContexts?.forEach { innerContext ->
+                            innerContext.innerContexts?.forEach { finalContext ->
+                                checkVersionAndPromote(finalContext.dockerInfo)
+                            }
+                        }
                     }
                 }
                 tempFile.copyTo(file, true)
-                logger.info("${file.path} UPDATED")
+                logger.debug("${file.path} UPDATED")
             }
             File("technologies")
                     .walk()
@@ -161,7 +173,6 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         project: Project,
         metadataFileList: MutableList<String>
     ): Task = project.tasks.create("downloadAndUnzipReleaseAssets") {
-
         doFirst {
             checkEnvVar()
             val config = PluginUtils.resolveConfig(project)
@@ -260,7 +271,6 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             logger.info("VERSION : ${project.relativePath(it.toPath())}")
                             hasVersion = true
                             File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
-
                             File("${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
                                 .checkYamlExtension()
                                 .copyTo(
@@ -270,15 +280,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                 }
                 if (hasVersion) {
-                    project.exec {
-                        workingDir = rootZipDir
-                        executable = "zip"
-                        args = listOf(
-                                "-r",
-                                "technologies.zip",
-                                "technologies"
-                        )
-                    }
+                    zipTo(File("$outputDirectory/technologies.zip"), rootZipDir)
                     generateListing(this)
                 }
             }
