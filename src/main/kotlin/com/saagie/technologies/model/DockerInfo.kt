@@ -26,10 +26,11 @@ data class DockerInfo(
     constructor() : this("", "")
 
     fun generateDocker() = "$image:$version".removeIllegalDockerCharacters()
-    fun generateDockerPromote() = "$image:$baseTag-${promoteVersion()}".removeIllegalDockerCharacters()
-    fun promoteVersion() = "$baseTag-${dynamicVersion?.removeBranchName()}"
+    fun generateDockerPromote() = "$image:${promoteVersion()}".removeIllegalDockerCharacters()
+    fun promoteVersion() = "${version?.removeBranchName()}"
 }
 
 private fun String.removeIllegalDockerCharacters() = this.replace("+", "_")
 
-private fun String.removeBranchName() = this.split("_").first()
+// Be careful not to use _ in branch names
+private fun String.removeBranchName() = this.substringBeforeLast("_")
