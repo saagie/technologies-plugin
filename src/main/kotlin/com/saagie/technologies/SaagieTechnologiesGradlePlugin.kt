@@ -58,6 +58,10 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
             this.noCache.set(true)
             this.inputDir.set(File("."))
             this.images.add(imageName)
+            this.registryCredentials {
+                username.set(System.getenv("DOCKER_USERNAME"))
+                password.set(System.getenv("DOCKER_PASSWORD"))
+            }
             doLast {
                 if (project.projectDir.absoluteFile.toPath().toString().contains("/innerContexts/")) {
                     File("${project.projectDir}/Dockerfile").delete()
@@ -70,6 +74,10 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val pullDockerImage = project.tasks.create<DockerPullImage>("pullDockerImage") {
             image.set(imageTestName)
+            this.registryCredentials {
+                username.set(System.getenv("DOCKER_USERNAME"))
+                password.set(System.getenv("DOCKER_PASSWORD"))
+            }
         }
 
         val createContainer = project.tasks.create<DockerCreateContainer>("createContainer") {
