@@ -74,10 +74,6 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val pullDockerImage = project.tasks.create<DockerPullImage>("pullDockerImage") {
             image.set(imageTestName)
-            this.registryCredentials {
-                username.set(System.getenv("DOCKER_USERNAME"))
-                password.set(System.getenv("DOCKER_PASSWORD"))
-            }
         }
 
         val createContainer = project.tasks.create<DockerCreateContainer>("createContainer") {
