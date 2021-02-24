@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright 2019-2020 Pierre Leresteux.
+ * Copyright 2019-2021 Pierre Leresteux.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    `kotlin-dsl`
+    id("org.gradle.kotlin.kotlin-dsl") version "1.3.3"
     `java-gradle-plugin`
     `maven-publish`
     id("com.gradle.plugin-publish") version "0.12.0"
