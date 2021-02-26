@@ -27,10 +27,10 @@ enum class TYPE(val folderName: String) {
 
 fun File.isADirectoryContainingFile(fileName: String): Boolean =
     this.isDirectory &&
-            (
-                    File(this.absolutePath + "/$fileName.yaml").exists() ||
-                            File(this.absolutePath + "/$fileName.yml").exists()
-                    )
+        (
+            File(this.absolutePath + "/$fileName.yaml").exists() ||
+                File(this.absolutePath + "/$fileName.yml").exists()
+            )
 
 fun String.isA(type: TYPE): Boolean = this.contains("/" + type.folderName + "/")
 
@@ -38,12 +38,12 @@ fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project>
     val listModifiedProjects = mutableSetOf<Project>()
 
     Runtime.getRuntime().exec(
-            arrayOf(
-                "bash",
-                "-c",
-                "git diff --name-only  origin/master..."
-            )
-        ).inputStream.bufferedReader().readText()
+        arrayOf(
+            "bash",
+            "-c",
+            "git diff --name-only  origin/master..."
+        )
+    ).inputStream.bufferedReader().readText()
         .split("\n").dropLast(1)
         .forEach { pathFile ->
             if (pathFile.isA(type) && (File(pathFile).isFile || !File(pathFile).exists())) {

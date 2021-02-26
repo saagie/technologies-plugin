@@ -55,13 +55,13 @@ fun ContextMetadataWithId.toContextListing() = ContextListing(
 )
 
 fun InnerContextMetadataWithId.toInnerContextListing() = InnerContextListing(
-        id = this.id ?: "",
-        innerContexts = this.innerContexts?.map { it.toFinalContextListing() }
+    id = this.id ?: "",
+    innerContexts = this.innerContexts?.map { it.toFinalContextListing() }
 )
 
 fun FinalContextMetadataWithId.toFinalContextListing() = FinalContextListing(
-        id = this.id ?: "",
-        docker = this.dockerInfo.toOneLine()
+    id = this.id ?: "",
+    docker = this.dockerInfo.toOneLine()
 )
 
 fun DockerInfo?.toOneLine() = when {
@@ -79,4 +79,5 @@ fun SimpleMetadataWithContexts.toListing() = Listing(
     technoId = this.id,
     technoType = this.type,
     docker = this.toDocker(),
-    contexts = this.contexts?.map { it.toContextListing() })
+    contexts = this.contexts?.map { it.toContextListing() }
+)

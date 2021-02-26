@@ -18,17 +18,17 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.gradle.kotlin.kotlin-dsl") version "1.3.3"
+    `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "0.12.0"
-    id("io.gitlab.arturbosch.detekt") version "1.3.1"
-    id("org.jmailen.kotlinter") version "2.1.3"
-    id("org.kordamp.gradle.project") version "0.38.0"
-    kotlin("jvm") version "1.3.70"
+    id("com.gradle.plugin-publish") version "0.13.0"
+    id("io.gitlab.arturbosch.detekt") version "1.15.0"
+    id("org.jmailen.kotlinter") version "3.3.0"
+    id("org.kordamp.gradle.project") version "0.43.0"
+    kotlin("jvm") version "1.4.20"
 }
 
-version = "1.2.13"
+version = "1.3.0"
 group = "com.saagie"
 
 config {
@@ -81,12 +81,12 @@ config {
 
 
 object VersionInfo {
-    const val kotlin = "1.3.70"
-    const val jackson = "2.10.3"
-    const val kordamp = "0.38.0"
-    const val junit = "5.5.2"
-    const val fuel = "2.2.1"
-    const val gradledocker = "6.3.0"
+    const val kotlin = "1.4.20"
+    const val jackson = "2.12.1"
+    const val kordamp = "0.43.0"
+    const val junit = "5.7.1"
+    const val fuel = "2.3.1"
+    const val gradledocker = "6.7.0"
 }
 
 val versions: VersionInfo by extra { VersionInfo }
@@ -115,7 +115,7 @@ dependencies {
 tasks {
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
-        kotlinOptions.apiVersion = "1.3"
+        kotlinOptions.apiVersion = "1.4"
     }
 
     withType<Test> {
