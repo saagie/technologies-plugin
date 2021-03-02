@@ -32,7 +32,7 @@ fun File.checkYamlExtension() =
                 Files.exists(Paths.get("$path.yml")) -> Paths.get("$path.yml").toFile()
                 else -> this
             }
-    }
+        }
 
 fun Path.checkYamlExtension() = this.toFile().checkYamlExtension().toPath()
 

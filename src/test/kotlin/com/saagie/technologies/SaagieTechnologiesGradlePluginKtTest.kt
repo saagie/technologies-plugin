@@ -37,10 +37,10 @@ class SaagieTechnologiesGradlePluginKtTest {
         @Test
         fun `generateVersionForDocker with simple version`() {
             with(
-                    ProjectBuilder.builder()
-                            .withProjectDir(projectdir)
-                            .withName("myproject")
-                            .build()
+                ProjectBuilder.builder()
+                    .withProjectDir(projectdir)
+                    .withName("myproject")
+                    .build()
             ) {
                 this.version = "1.2.3"
                 assertEquals(this.version, this.getVersionForDocker())
@@ -50,10 +50,10 @@ class SaagieTechnologiesGradlePluginKtTest {
         @Test
         fun `generateVersionForDocker with complex version`() {
             with(
-                    ProjectBuilder.builder()
-                            .withProjectDir(projectdir)
-                            .withName("myproject")
-                            .build()
+                ProjectBuilder.builder()
+                    .withProjectDir(projectdir)
+                    .withName("myproject")
+                    .build()
             ) {
                 this.version = "1.2.3+TEST"
                 assertEquals(this.version.toString().replace("+", "_"), this.getVersionForDocker())
@@ -83,13 +83,14 @@ class SaagieTechnologiesGradlePluginKtTest {
                 // Checks that generated Data are good
                 val dockerInfoFinalFile = File("${project.projectDir.absolutePath}/dockerInfo.yaml")
                 assertTrue(dockerInfoFinalFile.exists())
-                assertEquals("""
+                assertEquals(
+                    """
 image: ${dockerInfo.image}
 baseTag: ${dockerInfo.baseTag}
 dynamicVersion: ${project.version}
 version: ${dockerInfo.baseTag}-${project.version}
                     """.trimMargin(),
-                        dockerInfoFinalFile.readText().trimIndent()
+                    dockerInfoFinalFile.readText().trimIndent()
                 )
             }
         }

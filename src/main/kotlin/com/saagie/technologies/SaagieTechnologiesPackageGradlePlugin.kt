@@ -100,17 +100,17 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             logger.info("PROMOTING from ($dockerFormattedVersion) to ==> [$newVersion]")
             metadataFileList.forEach {
                 val metadata = getJacksonObjectMapper()
-                        .readValue((File(it)).inputStream(), ContextsMetadata::class.java)
+                    .readValue((File(it)).inputStream(), ContextsMetadata::class.java)
                 val tempFile = createTempFile()
                 val file = File(it)
                 tempFile.printWriter().use { writer ->
                     file.forEachLine { line ->
                         writer.println(
-                                when {
-                                    line.startsWith("      version: ") && line.endsWith(dockerFormattedVersion)
-                                    -> line.replace("-$dockerFormattedVersion", "-$newVersion")
-                                    else -> line
-                                }
+                            when {
+                                line.startsWith("      version: ") && line.endsWith(dockerFormattedVersion)
+                                -> line.replace("-$dockerFormattedVersion", "-$newVersion")
+                                else -> line
+                            }
                         )
                     }
                 }
@@ -118,9 +118,11 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     run {
                         fun checkVersionAndPromote(dockerInfo: DockerInfo?) {
                             if (dockerInfo?.version != null && dockerInfo.version.endsWith(dockerFormattedVersion)) {
-                                logger.info("\t\t${it.toString()
+                                logger.info(
+                                    "\t\t${it.toString()
                                         .replace("technologies/job/", "")
-                                        .replace("/metadata.yaml", "")} => ${dockerInfo.version}")
+                                        .replace("/metadata.yaml", "")} => ${dockerInfo.version}"
+                                )
                                 promoteDockerImage(dockerInfo)
                             }
                         }
@@ -136,36 +138,36 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 logger.debug("${file.path} UPDATED")
             }
             File("technologies")
-                    .walk()
-                    .filter { it.name == "$dockerInfoBaseFilename.yml" || it.name == "$dockerInfoBaseFilename.yaml" }
-                    .forEach { file ->
-                        file.readText().let { line ->
-                            file.writeText(line.replace("-$dockerFormattedVersion", "-$newVersion"))
-                        }
+                .walk()
+                .filter { it.name == "$dockerInfoBaseFilename.yml" || it.name == "$dockerInfoBaseFilename.yaml" }
+                .forEach { file ->
+                    file.readText().let { line ->
+                        file.writeText(line.replace("-$dockerFormattedVersion", "-$newVersion"))
                     }
+                }
         }
     }
 
     private fun promoteDockerImage(dockerInfo: DockerInfo) {
         with(
-                DockerClientBuilder
-                        .getInstance(
-                                DefaultDockerClientConfig
-                                        .createDefaultConfigBuilder()
-                                        .withRegistryUsername(System.getenv("DOCKER_USERNAME"))
-                                        .withRegistryPassword(System.getenv("DOCKER_PASSWORD"))
-                                        .build()
-                        )
+            DockerClientBuilder
+                .getInstance(
+                    DefaultDockerClientConfig
+                        .createDefaultConfigBuilder()
+                        .withRegistryUsername(System.getenv("DOCKER_USERNAME"))
+                        .withRegistryPassword(System.getenv("DOCKER_PASSWORD"))
                         .build()
+                )
+                .build()
         ) {
             pullImageCmd(dockerInfo.generateDocker())
-                    .exec(PullImageResultCallback())
-                    .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
+                .exec(PullImageResultCallback())
+                .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
             tagImageCmd(dockerInfo.generateDocker(), dockerInfo.image, dockerInfo.promoteVersion())
-                    .exec()
+                .exec()
             pushImageCmd(dockerInfo.generateDockerPromote())
-                    .exec(PushImageResultCallback())
-                    .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
+                .exec(PushImageResultCallback())
+                .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
         }
     }
 
@@ -178,18 +180,18 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             val config = PluginUtils.resolveConfig(project)
             val createTempFile = File.createTempFile("technologies", ".zip")
             val path = "${config.info.scm.url}/releases/download/" +
-                    "${project.property("version")}/technologies.zip"
+                "${project.property("version")}/technologies.zip"
             logger.debug("Download assets : $path")
             Fuel.download(path)
-                    .fileDestination { _, _ -> createTempFile }
-                    .response()
+                .fileDestination { _, _ -> createTempFile }
+                .response()
             logger.info("Download OK => ${createTempFile.absolutePath}")
             ZipFile(createTempFile).use { zip ->
                 zip.entries().asSequence().forEach { entry ->
                     zip.getInputStream(entry).use { input ->
                         if (
-                                entry.name.endsWith("$metadataBaseFilename.yml") ||
-                                entry.name.endsWith("$metadataBaseFilename.yaml")
+                            entry.name.endsWith("$metadataBaseFilename.yml") ||
+                            entry.name.endsWith("$metadataBaseFilename.yaml")
                         ) {
                             logger.debug(">> ${entry.name}")
                             metadataFileList.add(entry.name)
@@ -236,14 +238,14 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     private fun buildContextMetadata(contextName: String, file: File, targetMetadata: File, ident: String) {
         if (file.isADirectoryContainingFile(contextName)) {
             File("$file/$contextName.yaml")
-                    .checkYamlExtension()
-                    .readLines()
-                    .forEachIndexed { index, line ->
-                        when (index) {
-                            0 -> targetMetadata.appendText("\n$ident  - $line")
-                            else -> targetMetadata.appendText("\n$ident    $line")
-                        }
+                .checkYamlExtension()
+                .readLines()
+                .forEachIndexed { index, line ->
+                    when (index) {
+                        0 -> targetMetadata.appendText("\n$ident  - $line")
+                        else -> targetMetadata.appendText("\n$ident    $line")
                     }
+                }
             if (file.isADirectoryContainingFile(dockerInfoBaseFilename)) {
                 val dockerInfo = readDockerInfo(file)
                 targetMetadata.appendText("\n$ident    dockerInfo:")
@@ -288,55 +290,55 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     }
 
     private fun getJacksonYamlObjectMapper(): ObjectMapper =
-            ObjectMapper(
-                    YAMLFactory()
-                            .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
-                            .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
-            ).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                    .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        ObjectMapper(
+            YAMLFactory()
+                .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
+                .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
+        ).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
     private fun getJacksonJsonObjectMapper(): ObjectMapper =
-            ObjectMapper(JsonFactory())
-                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                    .configure(SerializationFeature.INDENT_OUTPUT, true)
-                    .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        ObjectMapper(JsonFactory())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(SerializationFeature.INDENT_OUTPUT, true)
+            .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
     private fun generateListing(path: String) {
         val yamlObjectMapper = getJacksonYamlObjectMapper()
         val jsonObjectMapper = getJacksonJsonObjectMapper()
         val dockerImages: MutableList<String> = mutableListOf()
         val listing = File(path)
-                .walk()
-                .filter {
-                    it.name == "$metadataBaseFilename.yml" ||
-                            it.name == "$metadataBaseFilename.yaml"
-                }
-                .map {
-                    yamlObjectMapper.readValue(it, SimpleMetadataWithContexts::class.java)
-                }
-                .map { it.toListing() }
-                .map { techno ->
-                    when {
-                        techno.docker != null -> {
-                            dockerImages.add(techno.docker)
-                        }
-                        else -> {
-                            techno.contexts?.forEach { context ->
-                                if (context.docker != null) {
-                                    dockerImages.add(context.docker)
-                                }
-                                context.innerContexts?.forEach { innerContext ->
-                                    innerContext.innerContexts?.forEach { finalContext ->
-                                        if (finalContext.docker != null) {
-                                            dockerImages.add(finalContext.docker)
-                                        }
+            .walk()
+            .filter {
+                it.name == "$metadataBaseFilename.yml" ||
+                    it.name == "$metadataBaseFilename.yaml"
+            }
+            .map {
+                yamlObjectMapper.readValue(it, SimpleMetadataWithContexts::class.java)
+            }
+            .map { it.toListing() }
+            .map { techno ->
+                when {
+                    techno.docker != null -> {
+                        dockerImages.add(techno.docker)
+                    }
+                    else -> {
+                        techno.contexts?.forEach { context ->
+                            if (context.docker != null) {
+                                dockerImages.add(context.docker)
+                            }
+                            context.innerContexts?.forEach { innerContext ->
+                                innerContext.innerContexts?.forEach { finalContext ->
+                                    if (finalContext.docker != null) {
+                                        dockerImages.add(finalContext.docker)
                                     }
                                 }
                             }
                         }
                     }
-                    techno
                 }
+                techno
+            }
         jsonObjectMapper.writeValue(File(path + "/$dockerListing.json"), listing)
 
         with(File(path + "/$dockerListing.txt")) {

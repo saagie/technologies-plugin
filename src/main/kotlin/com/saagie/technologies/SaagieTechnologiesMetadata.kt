@@ -30,29 +30,30 @@ import java.io.File
 import java.util.*
 
 fun Project.generateDockerTag(dockerInfo: DockerInfo): String =
-        "${dockerInfo.image}:${dockerInfo.baseTag}-${getVersionForDocker()}"
+    "${dockerInfo.image}:${dockerInfo.baseTag}-${getVersionForDocker()}"
 
 fun Project.getVersionForDocker(): String = "${this.rootProject.version}"
-        .replace("+", "_")
-        .replace("/", "-")
+    .replace("+", "_")
+    .replace("/", "-")
 
 fun readDockerInfo(projectDir: File): DockerInfo =
-        getJacksonObjectMapper().readValue(
-                File("${projectDir.absoluteFile}/dockerInfo.yaml")
-                        .checkYamlExtension()
-                        .inputStream(),
-                DockerInfo::class.java
-        )
+    getJacksonObjectMapper().readValue(
+        File("${projectDir.absoluteFile}/dockerInfo.yaml")
+            .checkYamlExtension()
+            .inputStream(),
+        DockerInfo::class.java
+    )
 
 fun storeDockerInfo(project: Project, dockerInfo: DockerInfo) {
     val targetDockerInfo = File("${project.projectDir.absolutePath}/dockerInfo.yaml").checkYamlExtension()
     targetDockerInfo.delete()
     targetDockerInfo.appendText(
-            getJacksonObjectMapper().writeValueAsString(
-                    dockerInfo.copy(
-                            dynamicVersion = "${project.getVersionForDocker()}",
-                            version = "${dockerInfo.baseTag}-${project.getVersionForDocker()}")
+        getJacksonObjectMapper().writeValueAsString(
+            dockerInfo.copy(
+                dynamicVersion = "${project.getVersionForDocker()}",
+                version = "${dockerInfo.baseTag}-${project.getVersionForDocker()}"
             )
+        )
     )
 }
 
