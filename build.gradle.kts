@@ -55,27 +55,6 @@ config {
             name = "Saagie"
             url = "http://www.saagie.com"
         }
-
-        people {
-            person {
-                id = "pierre"
-                name = "Pierre Leresteux"
-                email = "pierre@saagie.com"
-                roles = listOf("author", "developer")
-            }
-            person {
-                id = "guillaume"
-                name = "Guillaume Naimi"
-                email = "guillaume.naimi@saagie.com"
-                roles = listOf("developer")
-            }
-            person {
-                id = "yann"
-                name = "Yann Petit"
-                email = "yann.petit@saagie.com"
-                roles = listOf("developer")
-            }
-        }
     }
 }
 
