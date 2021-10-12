@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright 2019-2021 Pierre Leresteux.
+ * Copyright 2019-2021.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,10 +41,17 @@ fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project>
         arrayOf(
             "bash",
             "-c",
-            "git diff --name-only  origin/master..."
+            "git diff --name-only origin/master"
         )
     ).inputStream.bufferedReader().readText()
         .split("\n").dropLast(1)
+        .filter { pathFile ->
+            !pathFile.contains("context.yaml", true) &&
+                !pathFile.contains("technology.yaml", true) &&
+                !pathFile.contains("innerContext.yaml", true) &&
+                !pathFile.contains("metadata.yaml", true) &&
+                !pathFile.contains("build.gradle.kts", true)
+        } // Do not rebuild docker images if metadata files are the only ones modified
         .forEach { pathFile ->
             if (pathFile.isA(type) && (File(pathFile).isFile || !File(pathFile).exists())) {
                 subProjects

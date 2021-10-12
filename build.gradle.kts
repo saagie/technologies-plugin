@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright 2019-2021 Pierre Leresteux.
+ * Copyright 2019-2021.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ plugins {
     id("com.gradle.plugin-publish") version "0.13.0"
     id("io.gitlab.arturbosch.detekt") version "1.15.0"
     id("org.jmailen.kotlinter") version "3.3.0"
-    id("org.kordamp.gradle.project") version "0.43.0"
+    id("org.kordamp.gradle.project") version "0.46.0"
     kotlin("jvm") version "1.4.20"
 }
 
-version = "1.3.0"
+version = "1.3.1"
 group = "com.saagie"
 
 config {
@@ -55,27 +55,6 @@ config {
             name = "Saagie"
             url = "http://www.saagie.com"
         }
-
-        people {
-            person {
-                id = "pierre"
-                name = "Pierre Leresteux"
-                email = "pierre@saagie.com"
-                roles = listOf("author", "developer")
-            }
-            person {
-                id = "guillaume"
-                name = "Guillaume Naimi"
-                email = "guillaume.naimi@saagie.com"
-                roles = listOf("developer")
-            }
-            person {
-                id = "yann"
-                name = "Yann Petit"
-                email = "yann.petit@saagie.com"
-                roles = listOf("developer")
-            }
-        }
     }
 }
 
@@ -94,7 +73,6 @@ val github = "https://github.com/saagie/technologies-plugin"
 val packageName = "com.saagie.technologies"
 
 repositories {
-    jcenter()
     gradlePluginPortal()
 }
 
