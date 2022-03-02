@@ -282,7 +282,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                     }
                 }
                 if (hasVersion) {
-                    zipTo(File("$outputDirectory/technologies.zip"), rootZipDir)
+                    zipTo(File("$outputDirectory/technologies.zip"), File(rootZipDir, "technologies"))
                     generateListing(this)
                 }
             }
