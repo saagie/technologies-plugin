@@ -28,7 +28,7 @@ plugins {
     kotlin("jvm") version "1.4.20"
 }
 
-version = "1.3.1"
+version = "1.3.2"
 group = "com.saagie"
 
 config {
@@ -66,6 +66,7 @@ object VersionInfo {
     const val junit = "5.7.1"
     const val fuel = "2.3.1"
     const val gradledocker = "6.7.0"
+    const val gradleNode = "3.2.1"
 }
 
 val versions: VersionInfo by extra { VersionInfo }
@@ -85,6 +86,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${VersionInfo.jackson}")
     implementation("com.github.kittinunf.fuel:fuel:${VersionInfo.fuel}")
     implementation("org.kordamp.gradle:project-gradle-plugin:${VersionInfo.kordamp}")
+    implementation("com.github.node-gradle:gradle-node-plugin:${VersionInfo.gradleNode}")
 
     testImplementation("org.junit.jupiter:junit-jupiter:${VersionInfo.junit}")
     testImplementation(kotlin("test", version = versions.kotlin))

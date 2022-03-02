@@ -30,7 +30,10 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.kittinunf.fuel.Fuel
-import com.saagie.technologies.model.*
+import com.saagie.technologies.model.ContextsMetadata
+import com.saagie.technologies.model.DockerInfo
+import com.saagie.technologies.model.SimpleMetadataWithContexts
+import com.saagie.technologies.model.toListing
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -218,7 +221,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                 if (file.isADirectoryContainingFile(innerContextBaseFilename)) "        "
                                 else "    "
                             else ""
-                            buildContextMetadata(contextBaseFilename, file, targetMetadata, indent)
+                            buildContextMetadata(contextBaseFilename, it, file, targetMetadata, indent)
                             if (File("$file/$innerContextsDirectory").exists()) {
                                 targetMetadata.appendText("\n    innerContexts:")
                             }
@@ -226,7 +229,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                 if (file.isADirectoryContainingFile(contextBaseFilename)) {
                                     targetMetadata.appendText("\n        innerContexts:")
                                 }
-                                buildContextMetadata(innerContextBaseFilename, file, targetMetadata, indent)
+                                buildContextMetadata(innerContextBaseFilename, it, file, targetMetadata, indent)
                             }
                         }
                     }
@@ -235,12 +238,13 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun buildContextMetadata(contextName: String, file: File, targetMetadata: File, ident: String) {
+    private fun buildContextMetadata(contextName: String, root: File, file: File, targetMetadata: File, ident: String) {
         if (file.isADirectoryContainingFile(contextName)) {
             File("$file/$contextName.yaml")
                 .checkYamlExtension()
                 .readLines()
-                .forEachIndexed { index, line ->
+                .forEachIndexed { index, inputLine ->
+                    val line = inputLine.replace("script: ./", "script: ./${file.relativeTo(root)}/")
                     when (index) {
                         0 -> targetMetadata.appendText("\n$ident  - $line")
                         else -> targetMetadata.appendText("\n$ident    $line")
@@ -273,11 +277,31 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                             logger.info("VERSION : ${project.relativePath(it.toPath())}")
                             hasVersion = true
                             File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
-                            File("${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
+                            val metadataFile = File("${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
                                 .checkYamlExtension()
-                                .copyTo(
-                                    File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
-                                )
+                            metadataFile.copyTo(File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml"))
+                            val metadata = getJacksonYamlObjectMapper().readTree(metadataFile)
+                            (
+                                // ext job contexts
+                                metadata.path("contexts").flatMap {
+                                    it.path("parameters").map {
+                                        it.path("dynamicValues").path("script").asText()
+                                    } +
+                                        it.path("actions").map {
+                                            it.path("script").asText()
+                                        }
+                                } +
+                                    // connection types
+                                    metadata.path("parameters").map {
+                                        it.path("dynamicValues").path("script").asText()
+                                    } +
+                                    metadata.path("actions").map {
+                                        it.path("script").asText()
+                                    }
+                                ).filter { it.isNotBlank() }.toSet().forEach { script ->
+                                File("${project.relativePath(it.toPath())}/$script")
+                                    .copyTo(File("$this/${project.relativePath(it.toPath())}/$script"))
+                            }
                         }
                     }
                 }

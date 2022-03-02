@@ -22,7 +22,8 @@ import java.io.File
 
 enum class TYPE(val folderName: String) {
     JOB("job"),
-    APP("app")
+    APP("app"),
+    CONNECTION_TYPE("connectiontype")
 }
 
 fun File.isADirectoryContainingFile(fileName: String): Boolean =
@@ -49,9 +50,8 @@ fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project>
             !pathFile.contains("context.yaml", true) &&
                 !pathFile.contains("technology.yaml", true) &&
                 !pathFile.contains("innerContext.yaml", true) &&
-                !pathFile.contains("metadata.yaml", true) &&
-                !pathFile.contains("build.gradle.kts", true)
-        } // Do not rebuild docker images if metadata files are the only ones modified
+                !pathFile.contains("metadata.yaml", true)
+        } // Do not rebuild if metadata files are the only ones modified
         .forEach { pathFile ->
             if (pathFile.isA(type) && (File(pathFile).isFile || !File(pathFile).exists())) {
                 subProjects
