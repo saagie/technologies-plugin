@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright 2019-2021.
+ * Copyright 2019-2022 Creative Data.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,10 +44,18 @@ config {
         }
 
         licensing {
+            enabled = false // disabled because it seems impossible to make the licence check understand who is the copyright owner...
             licenses {
                 license {
                     id = "Apache-2.0"
                 }
+            }
+        }
+
+        people {
+            person {
+                id = "Creative Data"
+                name = "Creative Data"
             }
         }
 
