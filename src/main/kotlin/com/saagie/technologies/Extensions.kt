@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright 2019-2021.
+ * Copyright 2019-2022 Creative Data.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
  */
 package com.saagie.technologies
 
+import org.gradle.api.Project
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -37,3 +38,13 @@ fun File.checkYamlExtension() =
 fun Path.checkYamlExtension() = this.toFile().checkYamlExtension().toPath()
 
 fun String.checkYamlExtension() = Paths.get(this).checkYamlExtension().toUri().path
+
+fun Project.isDockerModule(): Boolean =
+    File(projectDir, "Dockerfile").exists() ||
+        (
+            projectDir.absoluteFile.toPath().toString().contains("/innerContexts/") &&
+                File(projectDir.parent, "Dockerfile").exists()
+            )
+
+fun Project.isJsModule(): Boolean =
+    File(projectDir, "package.json").exists()
