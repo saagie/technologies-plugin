@@ -29,7 +29,6 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
-import com.github.kittinunf.fuel.Fuel
 import com.saagie.technologies.model.ContextsMetadata
 import com.saagie.technologies.model.DockerInfo
 import com.saagie.technologies.model.SimpleMetadataWithContexts
@@ -38,10 +37,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.kotlin.dsl.support.zipTo
-import org.kordamp.gradle.util.PluginUtils
 import java.io.File
 import java.util.concurrent.TimeUnit
-import java.util.zip.ZipFile
 
 class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     companion object {
@@ -69,9 +66,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         /**
          * PROMOTE
          */
-        val metadataFileList = mutableListOf<String>()
-        val downloadAndUnzipReleaseAssets = downloadAndUnzipReleaseAssets(project, metadataFileList)
-        val fixMetadataVersion = fixMetadataVersion(project, downloadAndUnzipReleaseAssets, metadataFileList)
+        val fixMetadataVersion = fixMetadataVersion(project)
         promote(project, packageAllVersionsForPromote, fixMetadataVersion)
     }
 
@@ -91,55 +86,54 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     }
 
     private fun fixMetadataVersion(
-        project: Project,
-        downloadAndUnzipReleaseAssets: Task,
-        metadataFileList: MutableList<String>
+        project: Project
     ): Task = project.tasks.create("fixMetadataVersion") {
-        dependsOn(downloadAndUnzipReleaseAssets)
         doFirst {
             val version = (project.property("version") as String)
             val dockerFormattedVersion = version.replace("+", "_")
             val newVersion = version.split("+").first()
             logger.info("PROMOTING from ($dockerFormattedVersion) to ==> [$newVersion]")
-            metadataFileList.forEach {
-                val metadata = getJacksonObjectMapper()
-                    .readValue((File(it)).inputStream(), ContextsMetadata::class.java)
-                val tempFile = createTempFile()
-                val file = File(it)
-                tempFile.printWriter().use { writer ->
-                    file.forEachLine { line ->
-                        writer.println(
-                            when {
-                                line.startsWith("      version: ") && line.endsWith(dockerFormattedVersion)
-                                -> line.replace("-$dockerFormattedVersion", "-$newVersion")
-                                else -> line
-                            }
-                        )
-                    }
-                }
-                metadata.contexts.forEach { context ->
-                    run {
-                        fun checkVersionAndPromote(dockerInfo: DockerInfo?) {
-                            if (dockerInfo?.version != null && dockerInfo.version.endsWith(dockerFormattedVersion)) {
-                                logger.info(
-                                    "\t\t${it.toString()
-                                        .replace("technologies/job/", "")
-                                        .replace("/metadata.yaml", "")} => ${dockerInfo.version}"
-                                )
-                                promoteDockerImage(dockerInfo)
-                            }
-                        }
-                        checkVersionAndPromote(context.dockerInfo)
-                        context.innerContexts?.forEach { innerContext ->
-                            innerContext.innerContexts?.forEach { finalContext ->
-                                checkVersionAndPromote(finalContext.dockerInfo)
-                            }
+            File("technologies")
+                .walk()
+                .filter { it.name.endsWith("$metadataBaseFilename.yml") || it.name.endsWith("$metadataBaseFilename.yaml") }
+                .forEach {
+                    val metadata = getJacksonObjectMapper()
+                        .readValue(it.inputStream(), ContextsMetadata::class.java)
+                    val tempFile = createTempFile()
+                    tempFile.printWriter().use { writer ->
+                        it.forEachLine { line ->
+                            writer.println(
+                                when {
+                                    line.startsWith("      version: ") && line.endsWith(dockerFormattedVersion)
+                                    -> line.replace("-$dockerFormattedVersion", "-$newVersion")
+                                    else -> line
+                                }
+                            )
                         }
                     }
+                    metadata.contexts.forEach { context ->
+                        run {
+                            fun checkVersionAndPromote(dockerInfo: DockerInfo?) {
+                                if (dockerInfo?.version != null && dockerInfo.version.endsWith(dockerFormattedVersion)) {
+                                    logger.info(
+                                        "\t\t${it.toString()
+                                            .replace("technologies/job/", "")
+                                            .replace("/metadata.yaml", "")} => ${dockerInfo.version}"
+                                    )
+                                    promoteDockerImage(dockerInfo)
+                                }
+                            }
+                            checkVersionAndPromote(context.dockerInfo)
+                            context.innerContexts?.forEach { innerContext ->
+                                innerContext.innerContexts?.forEach { finalContext ->
+                                    checkVersionAndPromote(finalContext.dockerInfo)
+                                }
+                            }
+                        }
+                    }
+                    tempFile.copyTo(it, true)
+                    logger.debug("${it.path} UPDATED")
                 }
-                tempFile.copyTo(file, true)
-                logger.debug("${file.path} UPDATED")
-            }
             File("technologies")
                 .walk()
                 .filter { it.name == "$dockerInfoBaseFilename.yml" || it.name == "$dockerInfoBaseFilename.yaml" }
@@ -171,40 +165,6 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             pushImageCmd(dockerInfo.generateDockerPromote())
                 .exec(PushImageResultCallback())
                 .awaitCompletion(TIMEOUT_PUSH_PULL_DOCKER, TimeUnit.MINUTES)
-        }
-    }
-
-    private fun downloadAndUnzipReleaseAssets(
-        project: Project,
-        metadataFileList: MutableList<String>
-    ): Task = project.tasks.create("downloadAndUnzipReleaseAssets") {
-        doFirst {
-            checkEnvVar()
-            val config = PluginUtils.resolveConfig(project)
-            val createTempFile = File.createTempFile("technologies", ".zip")
-            val path = "${config.info.scm.url}/releases/download/" +
-                "${project.property("version")}/technologies.zip"
-            logger.info("Download assets : $path")
-            Fuel.download(path)
-                .fileDestination { _, _ -> createTempFile }
-                .response()
-            logger.info("Download OK => ${createTempFile.absolutePath}")
-            ZipFile(createTempFile).use { zip ->
-                zip.entries().asSequence().forEach { entry ->
-                    zip.getInputStream(entry).use { input ->
-                        if (
-                            entry.name.endsWith("$metadataBaseFilename.yml") ||
-                            entry.name.endsWith("$metadataBaseFilename.yaml")
-                        ) {
-                            logger.debug(">> ${entry.name}")
-                            metadataFileList.add(entry.name)
-                            val f = File(entry.name)
-                            f.parentFile.mkdirs()
-                            f.outputStream().use { input.copyTo(it) }
-                        }
-                    }
-                }
-            }
         }
     }
 
