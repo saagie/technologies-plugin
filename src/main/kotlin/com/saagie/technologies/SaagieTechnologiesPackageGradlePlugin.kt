@@ -198,7 +198,9 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                         ) {
                             logger.debug(">> ${entry.name}")
                             metadataFileList.add(entry.name)
-                            File(entry.name).outputStream().use { input.copyTo(it) }
+                            val f = File(entry.name)
+                            f.parentFile.mkdirs()
+                            f.outputStream().use { input.copyTo(it) }
                         }
                     }
                 }
