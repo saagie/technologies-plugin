@@ -184,7 +184,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             val createTempFile = File.createTempFile("technologies", ".zip")
             val path = "${config.info.scm.url}/releases/download/" +
                 "${project.property("version")}/technologies.zip"
-            logger.debug("Download assets : $path")
+            logger.info("Download assets : $path")
             Fuel.download(path)
                 .fileDestination { _, _ -> createTempFile }
                 .response()
