@@ -28,7 +28,7 @@ plugins {
     kotlin("jvm") version "1.4.20"
 }
 
-version = "1.3.5"
+version = "1.3.6"
 group = "com.saagie"
 
 config {
