@@ -267,7 +267,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                         }
                                     ).filter { it.isNotBlank() }.toSet().forEach { script ->
                                     File("${project.relativePath(it.toPath())}/$script")
-                                        .copyTo(File("$this/${project.relativePath(it.toPath())}/$script"))
+                                        .copyTo(File("$this/${project.relativePath(it.toPath())}/$script"), overwrite = true)
                                 }
                             }
                         }
