@@ -178,7 +178,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                         targetMetadata.delete()
                         File("$it/$technologyBaseFilename.yaml").checkYamlExtension().copyTo(targetMetadata)
                         targetMetadata.appendText("\ncontexts:")
-                        it.walkTopDown().sorted().forEach { file ->
+                        it.walkTopDown().filter { !it.absolutePath.contains("/node_modules/") }.sorted().forEach { file ->
                             run {
                                 val indent = if (file.absolutePath.contains(innerContextsDirectory))
                                     if (file.isADirectoryContainingFile(innerContextBaseFilename)) "        "
