@@ -233,40 +233,42 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 rootZipDir.deleteRecursively()
                 rootZipDir.mkdir()
                 var hasVersion = false
-                File(project.rootDir.path + "/technologies").walkTopDown().forEach {
-                    when {
-                        it.isADirectoryContainingFile(metadataBaseFilename) -> {
-                            logger.info("VERSION : ${project.relativePath(it.toPath())}")
-                            hasVersion = true
-                            File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
-                            val metadataFile = File("${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
-                                .checkYamlExtension()
-                            metadataFile.copyTo(File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml"))
-                            val metadata = getJacksonYamlObjectMapper().readTree(metadataFile)
-                            (
-                                // ext job contexts
-                                metadata.path("contexts").flatMap {
-                                    it.path("parameters").map {
-                                        it.path("dynamicValues").path("script").asText()
+                File(project.rootDir.path + "/technologies").walkTopDown()
+                    .filter { !it.absolutePath.contains("/node_modules/") }.forEach {
+                        when {
+                            it.isADirectoryContainingFile(metadataBaseFilename) -> {
+                                logger.info("VERSION : ${project.relativePath(it.toPath())}")
+                                hasVersion = true
+                                File("${rootZipDir.absolutePath}/${project.relativePath(it.toPath())}").mkdir()
+                                val metadataFile =
+                                    File("${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
+                                        .checkYamlExtension()
+                                metadataFile.copyTo(File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml"))
+                                val metadata = getJacksonYamlObjectMapper().readTree(metadataFile)
+                                (
+                                    // ext job contexts
+                                    metadata.path("contexts").flatMap {
+                                        it.path("parameters").map {
+                                            it.path("dynamicValues").path("script").asText()
+                                        } +
+                                            it.path("actions").map {
+                                                it.path("script").asText()
+                                            }
                                     } +
-                                        it.path("actions").map {
+                                        // connection types
+                                        metadata.path("parameters").map {
+                                            it.path("dynamicValues").path("script").asText()
+                                        } +
+                                        metadata.path("actions").map {
                                             it.path("script").asText()
                                         }
-                                } +
-                                    // connection types
-                                    metadata.path("parameters").map {
-                                        it.path("dynamicValues").path("script").asText()
-                                    } +
-                                    metadata.path("actions").map {
-                                        it.path("script").asText()
-                                    }
-                                ).filter { it.isNotBlank() }.toSet().forEach { script ->
-                                File("${project.relativePath(it.toPath())}/$script")
-                                    .copyTo(File("$this/${project.relativePath(it.toPath())}/$script"))
+                                    ).filter { it.isNotBlank() }.toSet().forEach { script ->
+                                    File("${project.relativePath(it.toPath())}/$script")
+                                        .copyTo(File("$this/${project.relativePath(it.toPath())}/$script"))
+                                }
                             }
                         }
                     }
-                }
                 if (hasVersion) {
                     zipTo(File("$outputDirectory/technologies.zip"), File(rootZipDir, "technologies"))
                     generateListing(this)
