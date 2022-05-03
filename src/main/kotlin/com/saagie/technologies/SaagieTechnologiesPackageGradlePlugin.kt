@@ -171,32 +171,33 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     private fun constructMetadata(project: Project): Task = project.tasks.create("constructMetadata") {
         doFirst {
             logger.info("Construct metadata")
-            File(project.rootDir.path + "/technologies").walkTopDown().forEach {
-                if (it.isADirectoryContainingFile(technologyBaseFilename)) {
-                    val targetMetadata = File("$it/$metadataBaseFilename.yaml")
-                    targetMetadata.delete()
-                    File("$it/$technologyBaseFilename.yaml").checkYamlExtension().copyTo(targetMetadata)
-                    targetMetadata.appendText("\ncontexts:")
-                    it.walkTopDown().sorted().forEach { file ->
-                        run {
-                            val indent = if (file.absolutePath.contains(innerContextsDirectory))
-                                if (file.isADirectoryContainingFile(innerContextBaseFilename)) "        "
-                                else "    "
-                            else ""
-                            buildContextMetadata(contextBaseFilename, it, file, targetMetadata, indent)
-                            if (File("$file/$innerContextsDirectory").exists()) {
-                                targetMetadata.appendText("\n    innerContexts:")
-                            }
-                            if (file.absolutePath.contains(innerContextsDirectory)) {
-                                if (file.isADirectoryContainingFile(contextBaseFilename)) {
-                                    targetMetadata.appendText("\n        innerContexts:")
+            File(project.rootDir.path + "/technologies").walkTopDown()
+                .filter { !it.absolutePath.contains("/node_modules/") }.forEach {
+                    if (it.isADirectoryContainingFile(technologyBaseFilename)) {
+                        val targetMetadata = File("$it/$metadataBaseFilename.yaml")
+                        targetMetadata.delete()
+                        File("$it/$technologyBaseFilename.yaml").checkYamlExtension().copyTo(targetMetadata)
+                        targetMetadata.appendText("\ncontexts:")
+                        it.walkTopDown().sorted().forEach { file ->
+                            run {
+                                val indent = if (file.absolutePath.contains(innerContextsDirectory))
+                                    if (file.isADirectoryContainingFile(innerContextBaseFilename)) "        "
+                                    else "    "
+                                else ""
+                                buildContextMetadata(contextBaseFilename, it, file, targetMetadata, indent)
+                                if (File("$file/$innerContextsDirectory").exists()) {
+                                    targetMetadata.appendText("\n    innerContexts:")
                                 }
-                                buildContextMetadata(innerContextBaseFilename, it, file, targetMetadata, indent)
+                                if (file.absolutePath.contains(innerContextsDirectory)) {
+                                    if (file.isADirectoryContainingFile(contextBaseFilename)) {
+                                        targetMetadata.appendText("\n        innerContexts:")
+                                    }
+                                    buildContextMetadata(innerContextBaseFilename, it, file, targetMetadata, indent)
+                                }
                             }
                         }
                     }
                 }
-            }
         }
     }
 
@@ -206,7 +207,9 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 .checkYamlExtension()
                 .readLines()
                 .forEachIndexed { index, inputLine ->
-                    val line = inputLine.replace("script: ./", "script: ./${file.relativeTo(root)}/")
+                    val line = inputLine
+                        .replace("script: ./", "script: ./${file.relativeTo(root)}/")
+                        .replace("script: ../", "script: ../${file.relativeTo(root)}/")
                     when (index) {
                         0 -> targetMetadata.appendText("\n$ident  - $line")
                         else -> targetMetadata.appendText("\n$ident    $line")
