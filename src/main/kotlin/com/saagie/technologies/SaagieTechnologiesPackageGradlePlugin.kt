@@ -209,7 +209,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                 .forEachIndexed { index, inputLine ->
                     val line = inputLine
                         .replace("script: ./", "script: ./${file.relativeTo(root)}/")
-                        .replace("script: ../", "script: ../${file.relativeTo(root)}/")
+                        .replace("script: ../", "script: ./${file.relativeTo(root)}/../")
                     when (index) {
                         0 -> targetMetadata.appendText("\n$ident  - $line")
                         else -> targetMetadata.appendText("\n$ident    $line")
