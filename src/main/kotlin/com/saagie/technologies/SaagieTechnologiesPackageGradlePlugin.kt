@@ -249,15 +249,17 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                 metadataFile.copyTo(File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml"))
                                 val metadata = getJacksonYamlObjectMapper().readTree(metadataFile)
                                 (
-                                    // ext job contexts
-                                    metadata.path("contexts").flatMap {
-                                        it.path("parameters").map {
-                                            it.path("dynamicValues").path("script").asText()
+                                    // ext techno icons
+                                    listOf(metadata.path("iconPath").asText()) +
+                                        // ext job contexts
+                                        metadata.path("contexts").flatMap {
+                                            it.path("parameters").map {
+                                                it.path("dynamicValues").path("script").asText()
+                                            } +
+                                                it.path("actions").map {
+                                                    it.path("script").asText()
+                                                }
                                         } +
-                                            it.path("actions").map {
-                                                it.path("script").asText()
-                                            }
-                                    } +
                                         // connection types
                                         metadata.path("parameters").map {
                                             it.path("dynamicValues").path("script").asText()
