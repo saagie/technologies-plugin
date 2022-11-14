@@ -67,7 +67,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
         val dockerInfo = readDockerInfo(project.projectDir)
         val imageName = project.generateDockerTag(dockerInfo)
 
-        val imageTestName = "gcr.io/gcp-runtimes/container-structure-test:latest"
+        val imageTestName = "gcr.io/gcp-runtimes/container-structure-test:v1.11.0"
         var logs = ""
 
         val buildImage = project.tasks.create<DockerBuildImage>("buildImage") {
