@@ -20,18 +20,20 @@ package com.saagie.technologies.model
 data class Listing(
     val technoId: String,
     val technoType: String,
+    val available: Boolean,
     val docker: String?,
     val contexts: List<ContextListing>?
 ) {
-    constructor() : this("", "", null, emptyList())
+    constructor() : this("", "", true, null, emptyList())
 }
 
 data class ContextListing(
     val id: String,
+    val available: Boolean,
     val docker: String?,
     val innerContexts: List<InnerContextListing>?
 ) {
-    constructor() : this("", null, emptyList())
+    constructor() : this("", true, null, emptyList())
 }
 
 data class InnerContextListing(
@@ -43,13 +45,15 @@ data class InnerContextListing(
 
 data class FinalContextListing(
     val id: String,
+    val available: Boolean,
     val docker: String?
 ) {
-    constructor() : this("", null)
+    constructor() : this("", true, null)
 }
 
 fun ContextMetadataWithId.toContextListing() = ContextListing(
     id = this.id ?: "",
+    available = this.available ?: true,
     docker = this.dockerInfo.toOneLine(),
     innerContexts = this.innerContexts?.map { it.toInnerContextListing() }
 )
@@ -61,6 +65,7 @@ fun InnerContextMetadataWithId.toInnerContextListing() = InnerContextListing(
 
 fun FinalContextMetadataWithId.toFinalContextListing() = FinalContextListing(
     id = this.id ?: "",
+    available = this.available ?: true,
     docker = this.dockerInfo.toOneLine()
 )
 
@@ -78,6 +83,7 @@ fun SimpleMetadataWithContexts.toDocker(): String? =
 fun SimpleMetadataWithContexts.toListing() = Listing(
     technoId = this.id,
     technoType = this.type,
+    available = this.available ?: true,
     docker = this.toDocker(),
     contexts = this.contexts?.map { it.toContextListing() }
 )
