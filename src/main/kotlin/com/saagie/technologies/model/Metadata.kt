@@ -18,23 +18,26 @@
 package com.saagie.technologies.model
 
 data class FinalContextMetadata(
+    val available: Boolean?,
     val dockerInfo: DockerInfo?
 ) {
-    constructor() : this(null)
+    constructor() : this(true, null)
 }
 
 data class InnerContextMetadata(
+    val available: Boolean?,
     val dockerInfo: DockerInfo?,
     val innerContexts: List<FinalContextMetadata>?
 ) {
-    constructor() : this(null, emptyList())
+    constructor() : this(true, null, emptyList())
 }
 
 data class ContextMetadata(
+    val available: Boolean?,
     val dockerInfo: DockerInfo?,
     val innerContexts: List<InnerContextMetadata>?
 ) {
-    constructor() : this(null, emptyList())
+    constructor() : this(true, null, emptyList())
 }
 
 data class ContextsMetadata(
@@ -45,33 +48,37 @@ data class ContextsMetadata(
 
 data class FinalContextMetadataWithId(
     val id: String?,
+    val available: Boolean?,
     val dockerInfo: DockerInfo?
 ) {
-    constructor() : this(null, null)
+    constructor() : this(null, true, null)
 }
 
 data class InnerContextMetadataWithId(
     val id: String?,
+    val available: Boolean?,
     val dockerInfo: DockerInfo?,
     val innerContexts: List<FinalContextMetadataWithId>?
 
 ) {
-    constructor() : this(null, null, emptyList())
+    constructor() : this(null, true, null, emptyList())
 }
 
 data class ContextMetadataWithId(
     val id: String?,
+    val available: Boolean?,
     val dockerInfo: DockerInfo?,
     val innerContexts: List<InnerContextMetadataWithId>?
 ) {
-    constructor() : this(null, null, emptyList())
+    constructor() : this(null, true, null, emptyList())
 }
 
 data class SimpleMetadataWithContexts(
     val id: String,
     val type: String,
+    val available: Boolean?,
     val dockerInfo: DockerInfo?,
     val contexts: List<ContextMetadataWithId>?
 ) {
-    constructor() : this("", "", null, emptyList())
+    constructor() : this("", "", true, null, emptyList())
 }
