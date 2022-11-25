@@ -19,7 +19,13 @@ package com.saagie.technologies
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonFactory
+import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonStreamContext
+import com.fasterxml.jackson.core.JsonToken
+import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
@@ -169,6 +175,8 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
     }
 
     private fun constructMetadata(project: Project): Task = project.tasks.create("constructMetadata") {
+        group = "technologies"
+        description = "Construct metadata files"
         doFirst {
             logger.info("Construct metadata")
             File(project.rootDir.path + "/technologies").walkTopDown()
@@ -218,9 +226,9 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
             if (file.isADirectoryContainingFile(dockerInfoBaseFilename)) {
                 val dockerInfo = readDockerInfo(file)
                 targetMetadata.appendText("\n$ident    dockerInfo:")
-                targetMetadata.appendText("\n$ident      image: ${dockerInfo.image}")
-                targetMetadata.appendText("\n$ident      baseTag: ${dockerInfo.baseTag}")
-                targetMetadata.appendText("\n$ident      version: ${dockerInfo.version}")
+                targetMetadata.appendText("\n$ident      image: \"${dockerInfo.image}\"")
+                targetMetadata.appendText("\n$ident      baseTag: \"${dockerInfo.baseTag}\"")
+                targetMetadata.appendText("\n$ident      version: \"${dockerInfo.version}\"")
             }
         }
     }
@@ -247,7 +255,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                                     File("${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml")
                                         .checkYamlExtension()
                                 metadataFile.copyTo(File("$this/${project.relativePath(it.toPath())}/$metadataBaseFilename.yaml"))
-                                val metadata = getJacksonYamlObjectMapper().readTree(metadataFile)
+                                val metadata = yamlMapper().readTree(metadataFile)
                                 (
                                     // ext techno icons
                                     listOf(metadata.path("iconPath").asText()) +
@@ -282,23 +290,10 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun getJacksonYamlObjectMapper(): ObjectMapper =
-        ObjectMapper(
-            YAMLFactory()
-                .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
-                .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
-        ).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
-
-    private fun getJacksonJsonObjectMapper(): ObjectMapper =
-        ObjectMapper(JsonFactory())
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(SerializationFeature.INDENT_OUTPUT, true)
-            .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
     private fun generateListing(path: String) {
-        val yamlObjectMapper = getJacksonYamlObjectMapper()
-        val jsonObjectMapper = getJacksonJsonObjectMapper()
+        val yamlObjectMapper = yamlMapper()
+        val jsonObjectMapper = jsonMapper()
         val dockerImages: MutableList<String> = mutableListOf()
         val listing = File(path)
             .walk()
@@ -350,3 +345,44 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         dependsOn(packageAllVersionsForPromote)
     }
 }
+
+private fun JsonStreamContext.getPath(base: String? = null): String {
+    val element = toString()
+    if (inRoot()) {
+        return element + (base ?: "")
+    }
+    val ancestor = base ?: ""
+    return parent.getPath("$element$ancestor")
+}
+
+private class AmbiguousStringJsonDeserializer : JsonDeserializer<String>() {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): String {
+        if (p.currentToken == JsonToken.VALUE_NUMBER_FLOAT) {
+            throw JsonParseException(p, "this float value is ambiguous : " + p.parsingContext.getPath())
+        }
+        return p.valueAsString
+    }
+}
+
+fun yamlMapper(): ObjectMapper =
+    ObjectMapper(
+        YAMLFactory()
+            .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
+            .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, false)
+    )
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .registerModule(
+            KotlinModule()
+                .addDeserializer(String::class.java, AmbiguousStringJsonDeserializer())
+        )
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+
+fun jsonMapper(): ObjectMapper =
+    ObjectMapper(JsonFactory())
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .configure(SerializationFeature.INDENT_OUTPUT, true)
+        .registerModule(
+            KotlinModule()
+                .addDeserializer(String::class.java, AmbiguousStringJsonDeserializer())
+        )
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
