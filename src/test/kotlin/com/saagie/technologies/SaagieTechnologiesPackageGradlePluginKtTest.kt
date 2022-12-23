@@ -14,7 +14,7 @@ class SaagieTechnologiesPackageGradlePluginKtTest {
     fun `Verify float value throw exception in a YAML`() {
         // Given
         val jacksonObject = yamlMapper()
-        //When
+        // When
         val thrown: JsonMappingException = assertThrows(JsonMappingException::class.java) {
             jacksonObject.readValue(File("src/test/resources/assets/yamlWithFloat.yaml"), DataTest::class.java)
         }
@@ -26,7 +26,8 @@ class SaagieTechnologiesPackageGradlePluginKtTest {
     fun `Verify float as String value is OK in a YAML`() {
         // Given
         val jacksonObject = yamlMapper()
-        //When
+
+        // When
         val result = jacksonObject.readValue(File("src/test/resources/assets/yamlWithString.yaml"), DataTest::class.java)
 
         assertTrue(result != null)
@@ -37,7 +38,8 @@ class SaagieTechnologiesPackageGradlePluginKtTest {
     fun `Verify float value throw exception in a JSON`() {
         // Given
         val jacksonObject = jsonMapper()
-        //When
+
+        // When
         val thrown: JsonMappingException = assertThrows(JsonMappingException::class.java) {
             jacksonObject.readValue(File("src/test/resources/assets/jsonWithFloat.json"), DataTest::class.java)
         }
@@ -49,11 +51,11 @@ class SaagieTechnologiesPackageGradlePluginKtTest {
     fun `Verify float as String value is OK in a JSON`() {
         // Given
         val jacksonObject = jsonMapper()
-        //When
+
+        // When
         val result = jacksonObject.readValue(File("src/test/resources/assets/jsonWithString.json"), DataTest::class.java)
 
         assertTrue(result != null)
         assertTrue(result == DataTest("2", "3", "1.02"))
     }
-
 }
