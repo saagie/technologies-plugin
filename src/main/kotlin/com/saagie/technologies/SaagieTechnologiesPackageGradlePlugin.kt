@@ -290,7 +290,6 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         }
     }
 
-
     private fun generateListing(path: String) {
         val yamlObjectMapper = yamlMapper()
         val jsonObjectMapper = jsonMapper()
