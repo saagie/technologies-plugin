@@ -23,16 +23,15 @@ pluginManagement {
 }
 
 plugins {
-    id("com.gradle.enterprise") version "3.5.2"
-    id("org.kordamp.gradle.settings") version "0.46.0"
+    id("com.gradle.develocity") version "3.18"
 }
 
-
-gradleEnterprise {
+develocity {
     buildScan {
-        termsOfServiceUrl = "https://gradle.com/terms-of-service"
-        termsOfServiceAgree = "yes"
+        termsOfUseUrl =  "https://gradle.com/terms-of-service"
+        termsOfUseAgree = "yes"
+        publishing.onlyIf { false }
     }
 }
-rootProject.name = 'technologiesplugin'
+rootProject.name = "technologiesplugin"
 

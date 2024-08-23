@@ -22,7 +22,7 @@ data class Listing(
     val technoType: String,
     val available: Boolean,
     val docker: String?,
-    val contexts: List<ContextListing>?
+    val contexts: List<ContextListing>?,
 ) {
     constructor() : this("", "", true, null, emptyList())
 }
@@ -31,14 +31,14 @@ data class ContextListing(
     val id: String,
     val available: Boolean,
     val docker: String?,
-    val innerContexts: List<InnerContextListing>?
+    val innerContexts: List<InnerContextListing>?,
 ) {
     constructor() : this("", true, null, emptyList())
 }
 
 data class InnerContextListing(
     val id: String,
-    val innerContexts: List<FinalContextListing>?
+    val innerContexts: List<FinalContextListing>?,
 ) {
     constructor() : this("", emptyList())
 }
@@ -46,33 +46,37 @@ data class InnerContextListing(
 data class FinalContextListing(
     val id: String,
     val available: Boolean,
-    val docker: String?
+    val docker: String?,
 ) {
     constructor() : this("", true, null)
 }
 
-fun ContextMetadataWithId.toContextListing() = ContextListing(
-    id = this.id ?: "",
-    available = this.available ?: true,
-    docker = this.dockerInfo.toOneLine(),
-    innerContexts = this.innerContexts?.map { it.toInnerContextListing() }
-)
+fun ContextMetadataWithId.toContextListing() =
+    ContextListing(
+        id = this.id ?: "",
+        available = this.available ?: true,
+        docker = this.dockerInfo.toOneLine(),
+        innerContexts = this.innerContexts?.map { it.toInnerContextListing() },
+    )
 
-fun InnerContextMetadataWithId.toInnerContextListing() = InnerContextListing(
-    id = this.id ?: "",
-    innerContexts = this.innerContexts?.map { it.toFinalContextListing() }
-)
+fun InnerContextMetadataWithId.toInnerContextListing() =
+    InnerContextListing(
+        id = this.id ?: "",
+        innerContexts = this.innerContexts?.map { it.toFinalContextListing() },
+    )
 
-fun FinalContextMetadataWithId.toFinalContextListing() = FinalContextListing(
-    id = this.id ?: "",
-    available = this.available ?: true,
-    docker = this.dockerInfo.toOneLine()
-)
+fun FinalContextMetadataWithId.toFinalContextListing() =
+    FinalContextListing(
+        id = this.id ?: "",
+        available = this.available ?: true,
+        docker = this.dockerInfo.toOneLine(),
+    )
 
-fun DockerInfo?.toOneLine() = when {
-    this != null -> "$image:$version"
-    else -> null
-}
+fun DockerInfo?.toOneLine() =
+    when {
+        this != null -> "$image:$version"
+        else -> null
+    }
 
 fun SimpleMetadataWithContexts.toDocker(): String? =
     when (this.type) {
@@ -80,10 +84,11 @@ fun SimpleMetadataWithContexts.toDocker(): String? =
         else -> null
     }
 
-fun SimpleMetadataWithContexts.toListing() = Listing(
-    technoId = this.id,
-    technoType = this.type,
-    available = this.available ?: true,
-    docker = this.toDocker(),
-    contexts = this.contexts?.map { it.toContextListing() }
-)
+fun SimpleMetadataWithContexts.toListing() =
+    Listing(
+        technoId = this.id,
+        technoType = this.type,
+        available = this.available ?: true,
+        docker = this.toDocker(),
+        contexts = this.contexts?.map { it.toContextListing() },
+    )

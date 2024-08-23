@@ -20,10 +20,12 @@ package com.saagie.technologies
 import org.gradle.api.Project
 import java.io.File
 
-enum class TYPE(val folderName: String) {
+enum class TYPE(
+    val folderName: String,
+) {
     JOB("job"),
     APP("app"),
-    CONNECTION_TYPE("connectiontype")
+    CONNECTION_TYPE("connectiontype"),
 }
 
 fun File.isADirectoryContainingFile(fileName: String): Boolean =
@@ -31,21 +33,29 @@ fun File.isADirectoryContainingFile(fileName: String): Boolean =
         (
             File(this.absolutePath + "/$fileName.yaml").exists() ||
                 File(this.absolutePath + "/$fileName.yml").exists()
-            )
+        )
 
 fun String.isA(type: TYPE): Boolean = this.contains("/" + type.folderName + "/")
 
-fun modifiedProjects(type: TYPE, subProjects: MutableSet<Project>): Set<Project> {
+fun modifiedProjects(
+    type: TYPE,
+    subProjects: MutableSet<Project>,
+): Set<Project> {
     val listModifiedProjects = mutableSetOf<Project>()
 
-    Runtime.getRuntime().exec(
-        arrayOf(
-            "bash",
-            "-c",
-            "git diff --name-only origin/master"
-        )
-    ).inputStream.bufferedReader().readText()
-        .split("\n").dropLast(1)
+    Runtime
+        .getRuntime()
+        .exec(
+            arrayOf(
+                "bash",
+                "-c",
+                "git diff --name-only origin/master",
+            ),
+        ).inputStream
+        .bufferedReader()
+        .readText()
+        .split("\n")
+        .dropLast(1)
         .filter { pathFile ->
             !pathFile.contains("context.yaml", true) &&
                 !pathFile.contains("technology.yaml", true) &&

@@ -27,33 +27,36 @@ import com.saagie.technologies.model.DockerInfo
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import java.io.File
-import java.util.*
+import java.util.Optional
 
-fun Project.generateDockerTag(dockerInfo: DockerInfo): String =
-    "${dockerInfo.image}:${dockerInfo.baseTag}-${getVersionForDocker()}"
+fun Project.generateDockerTag(dockerInfo: DockerInfo): String = "${dockerInfo.image}:${dockerInfo.baseTag}-${getVersionForDocker()}"
 
-fun Project.getVersionForDocker(): String = "${this.rootProject.version}"
-    .replace("+", "_")
-    .replace("/", "-")
+fun Project.getVersionForDocker(): String =
+    "${this.rootProject.version}"
+        .replace("+", "_")
+        .replace("/", "-")
 
 fun readDockerInfo(projectDir: File): DockerInfo =
     getJacksonObjectMapper().readValue(
         File("${projectDir.absoluteFile}/dockerInfo.yaml")
             .checkYamlExtension()
             .inputStream(),
-        DockerInfo::class.java
+        DockerInfo::class.java,
     )
 
-fun storeDockerInfo(project: Project, dockerInfo: DockerInfo) {
+fun storeDockerInfo(
+    project: Project,
+    dockerInfo: DockerInfo,
+) {
     val targetDockerInfo = File("${project.projectDir.absolutePath}/dockerInfo.yaml").checkYamlExtension()
     targetDockerInfo.delete()
     targetDockerInfo.appendText(
         getJacksonObjectMapper().writeValueAsString(
             dockerInfo.copy(
                 dynamicVersion = "${project.getVersionForDocker()}",
-                version = "${dockerInfo.baseTag}-${project.getVersionForDocker()}"
-            )
-        )
+                version = "${dockerInfo.baseTag}-${project.getVersionForDocker()}",
+            ),
+        ),
     )
 }
 
@@ -61,9 +64,10 @@ fun getJacksonObjectMapper(): ObjectMapper =
     ObjectMapper(
         YAMLFactory()
             .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false)
-            .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
+            .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true),
     ).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .registerModule(KotlinModule()).setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        .registerModule(KotlinModule.Builder().build())
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
 fun checkEnvVar() {
     listOf("DOCKER_USERNAME", "DOCKER_PASSWORD").forEach {
