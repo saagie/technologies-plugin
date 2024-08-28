@@ -27,20 +27,19 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class SaagieTechnologiesGradlePluginKtTest {
-
     @Nested
     inner class ProjectKotlinExtension {
-
         @TempDir
         lateinit var projectdir: File
 
         @Test
         fun `generateVersionForDocker with simple version`() {
             with(
-                ProjectBuilder.builder()
+                ProjectBuilder
+                    .builder()
                     .withProjectDir(projectdir)
                     .withName("myproject")
-                    .build()
+                    .build(),
             ) {
                 this.version = "1.2.3"
                 assertEquals(this.version, this.getVersionForDocker())
@@ -50,10 +49,11 @@ class SaagieTechnologiesGradlePluginKtTest {
         @Test
         fun `generateVersionForDocker with complex version`() {
             with(
-                ProjectBuilder.builder()
+                ProjectBuilder
+                    .builder()
                     .withProjectDir(projectdir)
                     .withName("myproject")
-                    .build()
+                    .build(),
             ) {
                 this.version = "1.2.3+TEST"
                 assertEquals(this.version.toString().replace("+", "_"), this.getVersionForDocker())
@@ -63,17 +63,17 @@ class SaagieTechnologiesGradlePluginKtTest {
 
     @Nested
     inner class StoreMetadata {
-
         @TempDir
         lateinit var projectdir: File
 
         @Test
         fun `generate and create metadata(dot)yml`() {
             with(
-                ProjectBuilder.builder()
+                ProjectBuilder
+                    .builder()
                     .withProjectDir(projectdir)
                     .withName("myproject")
-                    .build()
+                    .build(),
             ) {
                 project.setProperty("version", "1.29.0")
                 // following DockerInfo data
@@ -90,7 +90,7 @@ baseTag: ${dockerInfo.baseTag}
 dynamicVersion: ${project.version}
 version: ${dockerInfo.baseTag}-${project.version}
                     """.trimMargin(),
-                    dockerInfoFinalFile.readText().trimIndent()
+                    dockerInfoFinalFile.readText().trimIndent(),
                 )
             }
         }

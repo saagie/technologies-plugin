@@ -6,18 +6,22 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.File
 
-data class DataTest(val toto: String, val titi: String, val float: String)
+data class DataTest(
+    val toto: String,
+    val titi: String,
+    val float: String,
+)
 
 class SaagieTechnologiesPackageGradlePluginKtTest {
-
     @Test
     fun `Verify float value throw exception in a YAML`() {
         // Given
         val jacksonObject = yamlMapper()
         // When
-        val thrown: JsonMappingException = assertThrows(JsonMappingException::class.java) {
-            jacksonObject.readValue(File("src/test/resources/assets/yamlWithFloat.yaml"), DataTest::class.java)
-        }
+        val thrown: JsonMappingException =
+            assertThrows(JsonMappingException::class.java) {
+                jacksonObject.readValue(File("src/test/resources/assets/yamlWithFloat.yaml"), DataTest::class.java)
+            }
 
         thrown.message?.let { assertTrue(it.contains("this float value is ambiguous : ")) }
     }
@@ -40,9 +44,10 @@ class SaagieTechnologiesPackageGradlePluginKtTest {
         val jacksonObject = jsonMapper()
 
         // When
-        val thrown: JsonMappingException = assertThrows(JsonMappingException::class.java) {
-            jacksonObject.readValue(File("src/test/resources/assets/jsonWithFloat.json"), DataTest::class.java)
-        }
+        val thrown: JsonMappingException =
+            assertThrows(JsonMappingException::class.java) {
+                jacksonObject.readValue(File("src/test/resources/assets/jsonWithFloat.json"), DataTest::class.java)
+            }
 
         thrown.message?.let { assertTrue(it.contains("this float value is ambiguous : ")) }
     }

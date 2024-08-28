@@ -37,14 +37,19 @@ fun File.checkYamlExtension() =
 
 fun Path.checkYamlExtension() = this.toFile().checkYamlExtension().toPath()
 
-fun String.checkYamlExtension() = Paths.get(this).checkYamlExtension().toUri().path
+fun String.checkYamlExtension() =
+    Paths
+        .get(this)
+        .checkYamlExtension()
+        .toUri()
+        .path
 
 fun Project.isDockerModule(): Boolean =
     File(projectDir, "Dockerfile").exists() ||
         (
-            projectDir.absoluteFile.toPath().toString().contains("/innerContexts/") &&
+            projectDir.absoluteFile
+                .toPath()
+                .toString()
+                .contains("/innerContexts/") &&
                 File(projectDir.parent, "Dockerfile").exists()
-            )
-
-fun Project.isJsModule(): Boolean =
-    File(projectDir, "package.json").exists()
+        )

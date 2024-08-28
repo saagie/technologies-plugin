@@ -19,7 +19,7 @@ package com.saagie.technologies.model
 
 data class FinalContextMetadata(
     val available: Boolean?,
-    val dockerInfo: DockerInfo?
+    val dockerInfo: DockerInfo?,
 ) {
     constructor() : this(true, null)
 }
@@ -27,7 +27,7 @@ data class FinalContextMetadata(
 data class InnerContextMetadata(
     val available: Boolean?,
     val dockerInfo: DockerInfo?,
-    val innerContexts: List<FinalContextMetadata>?
+    val innerContexts: List<FinalContextMetadata>?,
 ) {
     constructor() : this(true, null, emptyList())
 }
@@ -35,13 +35,13 @@ data class InnerContextMetadata(
 data class ContextMetadata(
     val available: Boolean?,
     val dockerInfo: DockerInfo?,
-    val innerContexts: List<InnerContextMetadata>?
+    val innerContexts: List<InnerContextMetadata>?,
 ) {
     constructor() : this(true, null, emptyList())
 }
 
 data class ContextsMetadata(
-    val contexts: List<ContextMetadata> = emptyList()
+    val contexts: List<ContextMetadata> = emptyList(),
 ) {
     constructor() : this(emptyList())
 }
@@ -49,7 +49,7 @@ data class ContextsMetadata(
 data class FinalContextMetadataWithId(
     val id: String?,
     val available: Boolean?,
-    val dockerInfo: DockerInfo?
+    val dockerInfo: DockerInfo?,
 ) {
     constructor() : this(null, true, null)
 }
@@ -58,8 +58,7 @@ data class InnerContextMetadataWithId(
     val id: String?,
     val available: Boolean?,
     val dockerInfo: DockerInfo?,
-    val innerContexts: List<FinalContextMetadataWithId>?
-
+    val innerContexts: List<FinalContextMetadataWithId>?,
 ) {
     constructor() : this(null, true, null, emptyList())
 }
@@ -68,7 +67,7 @@ data class ContextMetadataWithId(
     val id: String?,
     val available: Boolean?,
     val dockerInfo: DockerInfo?,
-    val innerContexts: List<InnerContextMetadataWithId>?
+    val innerContexts: List<InnerContextMetadataWithId>?,
 ) {
     constructor() : this(null, true, null, emptyList())
 }
@@ -78,7 +77,7 @@ data class SimpleMetadataWithContexts(
     val type: String,
     val available: Boolean?,
     val dockerInfo: DockerInfo?,
-    val contexts: List<ContextMetadataWithId>?
+    val contexts: List<ContextMetadataWithId>?,
 ) {
     constructor() : this("", "", true, null, emptyList())
 }

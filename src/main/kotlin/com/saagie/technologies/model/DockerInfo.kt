@@ -21,12 +21,14 @@ data class DockerInfo(
     val image: String,
     val baseTag: String,
     val dynamicVersion: String? = null,
-    val version: String = "$baseTag-$dynamicVersion"
+    val version: String = "$baseTag-$dynamicVersion",
 ) {
     constructor() : this("", "")
 
     fun generateDocker() = "$image:$version".removeIllegalDockerCharacters()
+
     fun generateDockerPromote() = "$image:${promoteVersion()}".removeIllegalDockerCharacters()
+
     fun promoteVersion() = "${version?.removeBranchName()}"
 }
 
