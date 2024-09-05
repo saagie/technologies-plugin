@@ -113,7 +113,7 @@ class SaagieTechnologiesGradlePlugin : Plugin<Project> {
 
         val createContainer =
             project.tasks.create<DockerCreateContainer>("createContainer") {
-                dependsOn(pullDockerImage)
+                dependsOn(pullDockerImage, buildImage)
                 targetImageId(imageTestName)
                 hostConfig.autoRemove.set(false)
                 hostConfig.binds.put("/var/run/docker.sock", "/var/run/docker.sock")
