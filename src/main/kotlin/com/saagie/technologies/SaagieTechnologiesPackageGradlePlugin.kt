@@ -33,6 +33,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientImpl
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient
 import com.saagie.technologies.model.ContextsMetadata
 import com.saagie.technologies.model.DockerInfo
 import com.saagie.technologies.model.SimpleMetadataWithContexts
@@ -156,6 +157,23 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
         }
 
     private fun promoteDockerImage(dockerInfo: DockerInfo) {
+        val dockerHost = System.getenv("DOCKER_HOST")
+
+        val dockerClientConfig =
+            DefaultDockerClientConfig
+                .createDefaultConfigBuilder()
+                .withDockerHost(dockerHost)
+                .withDockerTlsVerify(false)
+                .build()
+
+        val httpClient =
+            ApacheDockerHttpClient
+                .Builder()
+                .dockerHost(dockerClientConfig.dockerHost)
+                .sslConfig(dockerClientConfig.sslConfig)
+                .maxConnections(100)
+                .build()
+
         with(
             DockerClientImpl
                 .getInstance(
@@ -164,6 +182,7 @@ class SaagieTechnologiesPackageGradlePlugin : Plugin<Project> {
                         .withRegistryUsername(System.getenv("DOCKER_USERNAME"))
                         .withRegistryPassword(System.getenv("DOCKER_PASSWORD"))
                         .build(),
+                    httpClient,
                 ),
         ) {
             pullImageCmd(dockerInfo.generateDocker())

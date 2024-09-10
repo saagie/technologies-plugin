@@ -25,7 +25,7 @@ plugins {
     id("com.gradle.plugin-publish") version "1.2.1"
 }
 
-version = "1.3.17"
+version = "1.3.18"
 group = "com.saagie"
 
 config {
